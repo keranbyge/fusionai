@@ -1,47 +1,51 @@
-import { useState } from "react";
-import { Code2, Minimize2, X, Send } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Code2, X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
-
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-}
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import type { Message } from "@shared/schema";
 
 interface CoderPanelProps {
+  workspaceId: string;
   onClose: () => void;
 }
 
-export function CoderPanel({ onClose }: CoderPanelProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      role: "assistant",
-      content: "Hi! I'm your coding assistant. I can help you write code, debug issues, and learn programming concepts. What would you like to work on?",
-    },
-  ]);
+export function CoderPanel({ workspaceId, onClose }: CoderPanelProps) {
   const [input, setInput] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const { data: messages = [] } = useQuery<Message[]>({
+    queryKey: ["/api/workspaces", workspaceId, "messages", "coder"],
+    queryFn: async () => {
+      const res = await fetch(`/api/workspaces/${workspaceId}/messages/coder`);
+      if (!res.ok) throw new Error("Failed to fetch messages");
+      return res.json();
+    },
+  });
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async (message: string) => {
+      const res = await apiRequest("POST", "/api/ai/coder", { workspaceId, message });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces", workspaceId, "messages", "coder"] });
+      setInput("");
+    },
+  });
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const handleSend = () => {
-    if (!input.trim()) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: input,
-    };
-
-    const aiMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      role: "assistant",
-      content: "I'm here to help! In the full version, I'll provide intelligent code suggestions and explanations based on your request.",
-    };
-
-    setMessages([...messages, userMessage, aiMessage]);
-    setInput("");
+    if (!input.trim() || sendMessageMutation.isPending) return;
+    sendMessageMutation.mutate(input);
   };
 
   return (
@@ -51,21 +55,25 @@ export function CoderPanel({ onClose }: CoderPanelProps) {
           <Code2 className="h-4 w-4 text-primary" />
           <span className="font-semibold text-sm">Coder</span>
         </div>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            data-testid="button-close-coder"
-            onClick={onClose}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          data-testid="button-close-coder"
+          onClick={onClose}
+        >
+          <X className="h-4 w-4" />
+        </Button>
       </header>
 
-      <ScrollArea className="flex-1 p-4">
+      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
         <div className="max-w-3xl mx-auto space-y-4">
+          {messages.length === 0 && (
+            <div className="text-center text-muted-foreground py-8">
+              <Code2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Start a coding conversation!</p>
+            </div>
+          )}
           {messages.map((message) => (
             <div
               key={message.id}
@@ -82,6 +90,13 @@ export function CoderPanel({ onClose }: CoderPanelProps) {
               </Card>
             </div>
           ))}
+          {sendMessageMutation.isPending && (
+            <div className="flex justify-start">
+              <Card className="px-4 py-3 bg-card">
+                <p className="text-sm text-muted-foreground">Thinking...</p>
+              </Card>
+            </div>
+          )}
         </div>
       </ScrollArea>
 
@@ -93,11 +108,13 @@ export function CoderPanel({ onClose }: CoderPanelProps) {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             data-testid="input-coder-message"
+            disabled={sendMessageMutation.isPending}
           />
           <Button
             size="icon"
             onClick={handleSend}
             data-testid="button-send-coder"
+            disabled={sendMessageMutation.isPending || !input.trim()}
           >
             <Send className="h-4 w-4" />
           </Button>

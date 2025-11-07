@@ -1,51 +1,96 @@
-import { useState } from "react";
-import { Plus, MoreVertical, Sparkles } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { CoderPanel } from "@/components/CoderPanel";
 import { ArtistPanel } from "@/components/ArtistPanel";
 import { TutorPanel } from "@/components/TutorPanel";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import {
   ResizablePanelGroup,
   ResizablePanel,
   ResizableHandle,
 } from "@/components/ui/resizable";
-
-interface Workspace {
-  id: string;
-  name: string;
-  lastModified: string;
-}
+import type { Workspace } from "@shared/schema";
+import { Sparkles } from "lucide-react";
 
 export default function WorkspacePage() {
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([
-    { id: "1", name: "My First Project", lastModified: "2 hours ago" },
-    { id: "2", name: "Learning React", lastModified: "Yesterday" },
-    { id: "3", name: "Portfolio Site", lastModified: "3 days ago" },
-  ]);
-  const [activeWorkspace, setActiveWorkspace] = useState("1");
+  const [activeWorkspace, setActiveWorkspace] = useState<string | null>(null);
   const [panelStates, setPanelStates] = useState({
     coder: true,
     artist: true,
     tutor: true,
   });
 
+  const { data: workspaces = [], isLoading } = useQuery<Workspace[]>({
+    queryKey: ["/api/workspaces"],
+  });
+
+  const createWorkspaceMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const res = await apiRequest("POST", "/api/workspaces", { name });
+      return await res.json();
+    },
+    onSuccess: (newWorkspace: Workspace) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces"] });
+      setActiveWorkspace(newWorkspace.id);
+      setPanelStates(newWorkspace.panelStates as any || { coder: true, artist: true, tutor: true });
+    },
+  });
+
+  const updateWorkspaceMutation = useMutation({
+    mutationFn: async ({ id, panelStates }: { id: string; panelStates: any }) => {
+      const res = await apiRequest("PATCH", `/api/workspaces/${id}`, { panelStates });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces"] });
+    },
+  });
+
+  useEffect(() => {
+    if (workspaces.length > 0 && !activeWorkspace) {
+      const first = workspaces[0];
+      setActiveWorkspace(first.id);
+      setPanelStates(first.panelStates as any || { coder: true, artist: true, tutor: true });
+    }
+  }, [workspaces, activeWorkspace]);
+
+  useEffect(() => {
+    if (activeWorkspace) {
+      const workspace = workspaces.find(w => w.id === activeWorkspace);
+      if (workspace) {
+        setPanelStates(workspace.panelStates as any || { coder: true, artist: true, tutor: true });
+      }
+    }
+  }, [activeWorkspace, workspaces]);
+
   const handleNewWorkspace = () => {
-    const newWorkspace: Workspace = {
-      id: Date.now().toString(),
-      name: `Workspace ${workspaces.length + 1}`,
-      lastModified: "Just now",
-    };
-    setWorkspaces([newWorkspace, ...workspaces]);
-    setActiveWorkspace(newWorkspace.id);
+    const name = `Workspace ${workspaces.length + 1}`;
+    createWorkspaceMutation.mutate(name);
   };
 
   const togglePanel = (panel: keyof typeof panelStates) => {
-    setPanelStates((prev) => ({ ...prev, [panel]: !prev[panel] }));
+    const newStates = { ...panelStates, [panel]: !panelStates[panel] };
+    setPanelStates(newStates);
+    if (activeWorkspace) {
+      updateWorkspaceMutation.mutate({ id: activeWorkspace, panelStates: newStates });
+    }
   };
 
   const visiblePanels = Object.entries(panelStates).filter(([_, visible]) => visible).length;
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-muted-foreground">Loading workspaces...</p>
+      </div>
+    );
+  }
+
+  const currentWorkspace = workspaces.find(w => w.id === activeWorkspace);
 
   return (
     <div className="flex h-screen bg-background">
@@ -63,6 +108,7 @@ export default function WorkspacePage() {
             onClick={handleNewWorkspace}
             className="w-full justify-start gap-2"
             data-testid="button-new-workspace"
+            disabled={createWorkspaceMutation.isPending}
           >
             <Plus className="h-4 w-4" />
             New Workspace
@@ -84,7 +130,7 @@ export default function WorkspacePage() {
               >
                 <div className="font-medium text-sm">{workspace.name}</div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  {workspace.lastModified}
+                  {new Date(workspace.updatedAt).toLocaleDateString()}
                 </div>
               </button>
             ))}
@@ -95,37 +141,43 @@ export default function WorkspacePage() {
       <main className="flex-1 flex flex-col overflow-hidden">
         <header className="h-14 border-b px-4 flex items-center justify-between bg-background">
           <h1 className="font-semibold">
-            {workspaces.find((w) => w.id === activeWorkspace)?.name}
+            {currentWorkspace?.name || "Select a workspace"}
           </h1>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => togglePanel("coder")}
-              data-testid="toggle-coder"
-            >
-              Coder {!panelStates.coder && "(Hidden)"}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => togglePanel("artist")}
-              data-testid="toggle-artist"
-            >
-              Artist {!panelStates.artist && "(Hidden)"}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => togglePanel("tutor")}
-              data-testid="toggle-tutor"
-            >
-              Tutor {!panelStates.tutor && "(Hidden)"}
-            </Button>
-          </div>
+          {activeWorkspace && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => togglePanel("coder")}
+                data-testid="toggle-coder"
+              >
+                Coder {!panelStates.coder && "(Hidden)"}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => togglePanel("artist")}
+                data-testid="toggle-artist"
+              >
+                Artist {!panelStates.artist && "(Hidden)"}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => togglePanel("tutor")}
+                data-testid="toggle-tutor"
+              >
+                Tutor {!panelStates.tutor && "(Hidden)"}
+              </Button>
+            </div>
+          )}
         </header>
 
-        {visiblePanels === 0 ? (
+        {!activeWorkspace ? (
+          <div className="flex-1 flex items-center justify-center text-muted-foreground">
+            <p>Create or select a workspace to get started</p>
+          </div>
+        ) : visiblePanels === 0 ? (
           <div className="flex-1 flex items-center justify-center text-muted-foreground">
             <p>All panels are hidden. Toggle a panel to start working.</p>
           </div>
@@ -134,7 +186,7 @@ export default function WorkspacePage() {
             {panelStates.coder && (
               <>
                 <ResizablePanel defaultSize={33} minSize={20}>
-                  <CoderPanel onClose={() => togglePanel("coder")} />
+                  <CoderPanel workspaceId={activeWorkspace} onClose={() => togglePanel("coder")} />
                 </ResizablePanel>
                 {(panelStates.artist || panelStates.tutor) && <ResizableHandle />}
               </>
@@ -143,7 +195,7 @@ export default function WorkspacePage() {
             {panelStates.artist && (
               <>
                 <ResizablePanel defaultSize={33} minSize={20}>
-                  <ArtistPanel onClose={() => togglePanel("artist")} />
+                  <ArtistPanel workspaceId={activeWorkspace} onClose={() => togglePanel("artist")} />
                 </ResizablePanel>
                 {panelStates.tutor && <ResizableHandle />}
               </>
@@ -151,7 +203,7 @@ export default function WorkspacePage() {
 
             {panelStates.tutor && (
               <ResizablePanel defaultSize={33} minSize={20}>
-                <TutorPanel onClose={() => togglePanel("tutor")} />
+                <TutorPanel workspaceId={activeWorkspace} onClose={() => togglePanel("tutor")} />
               </ResizablePanel>
             )}
           </ResizablePanelGroup>
