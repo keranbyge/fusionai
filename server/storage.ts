@@ -73,6 +73,7 @@ export class MemStorage implements IStorage {
     const workspace: Workspace = {
       ...insertWorkspace,
       id,
+      panelStates: insertWorkspace.panelStates ?? { coder: true, artist: true, tutor: true },
       createdAt: now,
       updatedAt: now,
     };
