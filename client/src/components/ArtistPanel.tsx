@@ -1,72 +1,96 @@
 import { useState, useRef, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { Sparkles, X, Send, Mic, MicOff, Trash2, ZoomIn, ZoomOut } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Sparkles, X, Send, Mic, MicOff, Trash2, Download, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { voiceManager } from "@/lib/voiceManager";
+import mermaid from "mermaid";
+import type { Diagram } from "@shared/schema";
 
 interface ArtistPanelProps {
   workspaceId: string;
   onClose: () => void;
 }
 
-interface CanvasImage {
-  id: string;
-  url: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
 export function ArtistPanel({ workspaceId, onClose }: ArtistPanelProps) {
   const [input, setInput] = useState("");
   const [isListening, setIsListening] = useState(false);
-  const [images, setImages] = useState<CanvasImage[]>([]);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const canvasRef = useRef<HTMLDivElement>(null);
+  const [selectedDiagram, setSelectedDiagram] = useState<string | null>(null);
+  const mermaidRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
-  const generateImageMutation = useMutation({
+  // Initialize Mermaid
+  useEffect(() => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'dark',
+      themeVariables: {
+        primaryColor: '#6366f1',
+        primaryTextColor: '#fff',
+        primaryBorderColor: '#4f46e5',
+        lineColor: '#8b5cf6',
+        secondaryColor: '#ec4899',
+        tertiaryColor: '#14b8a6',
+        background: '#1e1e2e',
+        mainBkg: '#1e1e2e',
+        secondBkg: '#2d2d3d',
+        tertiaryBkg: '#3d3d4d',
+      },
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis',
+      },
+    });
+  }, []);
+
+  // Fetch diagrams for this workspace
+  const { data: diagrams = [], isLoading: diagramsLoading } = useQuery<Diagram[]>({
+    queryKey: [`/api/workspaces/${workspaceId}/diagrams`],
+  });
+
+  // Generate diagram mutation
+  const generateDiagramMutation = useMutation({
     mutationFn: async (prompt: string) => {
-      console.log("Sending image generation request:", prompt);
-      const res = await apiRequest("POST", "/api/ai/generate-image", { prompt });
+      const res = await apiRequest("POST", "/api/ai/artist", { 
+        workspaceId,
+        prompt 
+      });
       const data = await res.json();
-      console.log("Received image generation response:", data);
       return data;
     },
-    onSuccess: (data) => {
-      console.log("Image generation success:", data);
-      if (data.imageUrl) {
-        const newImage: CanvasImage = {
-          id: Date.now().toString(),
-          url: data.imageUrl,
-          x: 100,
-          y: 100,
-          width: 512,
-          height: 512,
-        };
-        console.log("Adding image to canvas:", newImage);
-        setImages([...images, newImage]);
-      } else {
-        console.error("No imageUrl in response:", data);
-        alert("Failed to generate image: " + (data.error || "Unknown error"));
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/workspaces/${workspaceId}/diagrams`] });
       setInput("");
     },
     onError: (error) => {
-      console.error("Image generation error:", error);
-      alert("Failed to generate image: " + error.message);
+      console.error("Diagram generation error:", error);
+      alert("Failed to generate diagram. Please try again.");
     },
   });
 
+  // Render Mermaid diagrams when they change
+  useEffect(() => {
+    if (diagrams.length > 0) {
+      diagrams.forEach(async (diagram) => {
+        const element = mermaidRefs.current[diagram.id];
+        if (element && diagram.mermaidCode) {
+          try {
+            element.innerHTML = '';
+            const { svg } = await mermaid.render(`mermaid-${diagram.id}`, diagram.mermaidCode);
+            element.innerHTML = svg;
+          } catch (error) {
+            console.error("Mermaid render error:", error);
+            element.innerHTML = `<div class="text-destructive p-4">Failed to render diagram</div>`;
+          }
+        }
+      });
+    }
+  }, [diagrams]);
+
   const handleGenerate = () => {
-    if (!input.trim() || generateImageMutation.isPending) return;
-    generateImageMutation.mutate(input);
+    if (!input.trim() || generateDiagramMutation.isPending) return;
+    generateDiagramMutation.mutate(input);
   };
 
   const toggleVoiceInput = () => {
@@ -86,159 +110,154 @@ export function ArtistPanel({ workspaceId, onClose }: ArtistPanelProps) {
     return () => clearInterval(interval);
   }, []);
 
-  const handleCanvasMouseDown = (e: React.MouseEvent) => {
-    if (e.target === canvasRef.current) {
-      setIsDragging(true);
-      setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
-    }
+  const downloadDiagram = (diagramId: string) => {
+    const element = mermaidRefs.current[diagramId];
+    if (!element) return;
+
+    const svg = element.querySelector('svg');
+    if (!svg) return;
+
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const blob = new Blob([svgData], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `diagram-${diagramId}.svg`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
-  const handleCanvasMouseMove = (e: React.MouseEvent) => {
-    if (isDragging) {
-      setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
-    }
-  };
-
-  const handleCanvasMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const deleteImage = (id: string) => {
-    setImages(images.filter(img => img.id !== id));
-    if (selectedImage === id) setSelectedImage(null);
+  const regenerateDiagram = (diagram: Diagram) => {
+    generateDiagramMutation.mutate(diagram.prompt);
   };
 
   return (
-    <div className="h-full flex flex-col bg-white/5 backdrop-blur-sm">
-      <header className="h-12 border-b border-white/10 px-4 flex items-center justify-between bg-white/5 backdrop-blur-md">
+    <div className="h-full flex flex-col bg-card/50 backdrop-blur-sm">
+      <header className="h-12 border-b border-border px-4 flex items-center justify-between bg-card/80 backdrop-blur-md">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" />
           <span className="font-semibold text-sm">Artist Canvas</span>
         </div>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => setZoom(Math.min(zoom + 0.2, 3))}
-          >
-            <ZoomIn className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => setZoom(Math.max(zoom - 0.2, 0.5))}
-          >
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={onClose}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={onClose}
+          data-testid="button-close-artist"
+        >
+          <X className="h-4 w-4" />
+        </Button>
       </header>
 
-      <div
-        ref={canvasRef}
-        className="flex-1 relative overflow-hidden cursor-move"
-        style={{
-          background: "repeating-linear-gradient(0deg, transparent, transparent 19px, hsl(var(--border)) 19px, hsl(var(--border)) 20px), repeating-linear-gradient(90deg, transparent, transparent 19px, hsl(var(--border)) 19px, hsl(var(--border)) 20px)",
-          backgroundColor: "hsl(var(--muted))",
-        }}
-        onMouseDown={handleCanvasMouseDown}
-        onMouseMove={handleCanvasMouseMove}
-        onMouseUp={handleCanvasMouseUp}
-        onMouseLeave={handleCanvasMouseUp}
-      >
-        <div
-          style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-            transformOrigin: "0 0",
-          }}
-        >
-          {images.map((img) => (
-            <div
-              key={img.id}
-              className={`absolute cursor-pointer border-2 ${
-                selectedImage === img.id ? "border-primary" : "border-transparent"
-              } hover:border-primary/50`}
-              style={{
-                left: img.x,
-                top: img.y,
-                width: img.width,
-                height: img.height,
-              }}
-              onClick={() => setSelectedImage(img.id)}
-            >
-              <img
-                src={img.url}
-                alt="Generated"
-                className="w-full h-full object-cover"
-                draggable={false}
-              />
-              {selectedImage === img.id && (
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  className="absolute -top-2 -right-2 h-6 w-6"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteImage(img.id);
-                  }}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {generateImageMutation.isPending && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-6 rounded-lg shadow-lg">
-              <p className="text-sm">Generating image...</p>
-            </div>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {diagramsLoading && (
+          <div className="flex items-center justify-center h-32">
+            <div className="text-sm text-muted-foreground">Loading diagrams...</div>
           </div>
         )}
 
-        {images.length === 0 && !generateImageMutation.isPending && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        {!diagramsLoading && diagrams.length === 0 && !generateDiagramMutation.isPending && (
+          <div className="flex items-center justify-center h-full">
             <div className="text-center max-w-md">
               <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-semibold mb-2">Create AI Art</h3>
-              <p className="text-sm text-muted-foreground">
-                Describe the image you want to create and I'll generate it for you.
+              <h3 className="text-lg font-semibold mb-2">Create AI Diagrams</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Describe a flowchart, sequence diagram, or any other diagram you want to create.
               </p>
+              <div className="text-xs text-muted-foreground space-y-1 text-left bg-muted/50 p-3 rounded-md">
+                <p><strong>Examples:</strong></p>
+                <p>• "Create a flowchart for a user login process"</p>
+                <p>• "Show me a sequence diagram for API authentication"</p>
+                <p>• "Draw a class diagram for a social media app"</p>
+                <p>• "Make a state diagram for order processing"</p>
+              </div>
             </div>
           </div>
         )}
+
+        {generateDiagramMutation.isPending && (
+          <div className="flex items-center justify-center h-32 bg-muted/50 rounded-lg border border-border">
+            <div className="text-center">
+              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-3"></div>
+              <p className="text-sm text-muted-foreground">Generating diagram...</p>
+            </div>
+          </div>
+        )}
+
+        {diagrams.map((diagram) => (
+          <div
+            key={diagram.id}
+            className={`bg-card border rounded-lg overflow-hidden transition-all ${
+              selectedDiagram === diagram.id ? "border-primary shadow-lg" : "border-border"
+            }`}
+            onClick={() => setSelectedDiagram(diagram.id)}
+            data-testid={`diagram-${diagram.id}`}
+          >
+            <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground truncate">{diagram.prompt}</p>
+              </div>
+              <div className="flex items-center gap-1 ml-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    regenerateDiagram(diagram);
+                  }}
+                  data-testid={`button-regenerate-${diagram.id}`}
+                >
+                  <RefreshCw className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    downloadDiagram(diagram.id);
+                  }}
+                  data-testid={`button-download-${diagram.id}`}
+                >
+                  <Download className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+            <div className="p-6 bg-background/50 min-h-[200px] flex items-center justify-center overflow-x-auto">
+              <div
+                ref={(el) => (mermaidRefs.current[diagram.id] = el)}
+                className="mermaid-diagram w-full"
+                data-testid={`mermaid-render-${diagram.id}`}
+              />
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="border-t border-white/10 p-4 bg-white/5 backdrop-blur-md">
+      <div className="border-t border-border p-4 bg-card/80 backdrop-blur-md">
         <div className="flex gap-2">
           <Input
-            placeholder="Describe the image you want to create..."
+            placeholder="Describe the diagram you want to create (or use voice)..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-            disabled={generateImageMutation.isPending}
+            disabled={generateDiagramMutation.isPending}
+            data-testid="input-diagram-prompt"
           />
           <Button
             size="icon"
             variant={isListening ? "destructive" : "outline"}
             onClick={toggleVoiceInput}
+            data-testid="button-voice-toggle"
           >
             {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
           </Button>
           <Button
             size="icon"
             onClick={handleGenerate}
-            disabled={generateImageMutation.isPending || !input.trim()}
+            disabled={generateDiagramMutation.isPending || !input.trim()}
+            data-testid="button-generate-diagram"
           >
             <Send className="h-4 w-4" />
           </Button>
