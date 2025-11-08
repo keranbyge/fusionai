@@ -32,7 +32,9 @@ export interface IStorage {
   createMessage(message: InsertMessage): Promise<Message>;
   
   getDiagramsByWorkspace(workspaceId: string): Promise<Diagram[]>;
+  getDiagram(id: string): Promise<Diagram | undefined>;
   createDiagram(diagram: InsertDiagram): Promise<Diagram>;
+  deleteDiagram(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -136,12 +138,22 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(diagrams.createdAt));
   }
 
+  async getDiagram(id: string): Promise<Diagram | undefined> {
+    const [diagram] = await db.select().from(diagrams).where(eq(diagrams.id, id));
+    return diagram;
+  }
+
   async createDiagram(insertDiagram: InsertDiagram): Promise<Diagram> {
     const [diagram] = await db
       .insert(diagrams)
       .values(insertDiagram)
       .returning();
     return diagram;
+  }
+
+  async deleteDiagram(id: string): Promise<boolean> {
+    const result = await db.delete(diagrams).where(eq(diagrams.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
   }
 }
 

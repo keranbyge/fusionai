@@ -69,6 +69,26 @@ export function ArtistPanel({ workspaceId, onClose }: ArtistPanelProps) {
     },
   });
 
+  // Delete diagram mutation
+  const deleteDiagramMutation = useMutation({
+    mutationFn: async (diagramId: string) => {
+      try {
+        const res = await apiRequest("DELETE", `/api/diagrams/${diagramId}`, {});
+        return await res.json();
+      } catch (error) {
+        console.error("Diagram deletion error:", error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/workspaces/${workspaceId}/diagrams`] });
+    },
+    onError: (error) => {
+      console.error("Diagram deletion error:", error);
+      alert("Failed to delete diagram. Please try again.");
+    },
+  });
+
   // Render Mermaid diagrams when they change
   useEffect(() => {
     if (diagrams.length > 0) {
@@ -221,6 +241,25 @@ export function ArtistPanel({ workspaceId, onClose }: ArtistPanelProps) {
                   data-testid={`button-download-${diagram.id}`}
                 >
                   <Download className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm("Delete this diagram?")) {
+                      deleteDiagramMutation.mutate(diagram.id);
+                    }
+                  }}
+                  disabled={deleteDiagramMutation.isPending}
+                  data-testid={`button-delete-${diagram.id}`}
+                >
+                  {deleteDiagramMutation.isPending ? (
+                    <div className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full" />
+                  ) : (
+                    <X className="h-3 w-3" />
+                  )}
                 </Button>
               </div>
             </div>

@@ -301,7 +301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         messages: [
           {
             role: "system",
-            content: "You are an expert at creating diagrams using Mermaid.js syntax. When given a description, generate valid Mermaid.js code for flowcharts, sequence diagrams, class diagrams, or other diagram types. Only respond with the Mermaid code, no explanations or markdown code blocks.",
+            content: "You are an expert at creating diagrams using Mermaid.js syntax. IMPORTANT: Always wrap node text with quotes if it contains spaces or special characters. Use proper Mermaid syntax: A[\"Text with spaces\"] instead of A[Text with spaces]. When given a description, generate valid Mermaid.js code for flowcharts, sequence diagrams, class diagrams, or other diagram types. Only respond with the Mermaid code, no explanations or markdown code blocks.",
           },
           {
             role: "user",
@@ -381,7 +381,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         messages: [
           {
             role: "system",
-            content: "You are an expert at creating technical diagrams using Mermaid.js syntax. Create flowcharts for algorithms, class diagrams for code structure, or state diagrams for behavior. Focus on visualizing the CODE and LOGIC, not conversations. Only respond with the Mermaid code, no explanations or markdown code blocks.",
+            content: "You are an expert at creating technical diagrams using Mermaid.js syntax. IMPORTANT: Always wrap node text with quotes if it contains spaces or special characters. Use proper Mermaid syntax: A[\"Text with spaces\"] instead of A[Text with spaces]. Create flowcharts for algorithms, class diagrams for code structure, or state diagrams for behavior. Focus on visualizing the CODE and LOGIC, not conversations. Only respond with valid Mermaid code, no explanations or markdown code blocks.",
           },
           {
             role: "user",
@@ -505,6 +505,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching diagrams:", error);
       res.status(500).json({ error: "Failed to fetch diagrams" });
+    }
+  });
+
+  // Delete diagram endpoint (protected)
+  app.delete("/api/diagrams/:diagramId", requireAuth, async (req, res) => {
+    try {
+      const { diagramId } = req.params;
+      
+      // First, get the diagram to verify ownership via workspace
+      const diagram = await storage.getDiagram(diagramId);
+      
+      if (!diagram) {
+        return res.status(404).json({ error: "Diagram not found" });
+      }
+      
+      // Verify workspace ownership
+      const workspace = await storage.getWorkspace(diagram.workspaceId);
+      if (!workspace) {
+        return res.status(404).json({ error: "Workspace not found" });
+      }
+      if (workspace.userId !== req.session.userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      const deleted = await storage.deleteDiagram(diagramId);
+      if (deleted) {
+        res.json({ success: true });
+      } else {
+        res.status(404).json({ error: "Diagram not found" });
+      }
+    } catch (error) {
+      console.error("Error deleting diagram:", error);
+      res.status(500).json({ error: "Failed to delete diagram" });
     }
   });
 
