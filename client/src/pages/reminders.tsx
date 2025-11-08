@@ -43,11 +43,18 @@ export default function RemindersPage() {
 
   const createReminderMutation = useMutation({
     mutationFn: async (data: ReminderFormData) => {
-      return apiRequest("POST", "/api/reminders", {
-        ...data,
+      const payload: any = {
+        title: data.title,
+        description: data.description || undefined,
         reminderDate: new Date(data.reminderDate).toISOString(),
         completed: false,
-      });
+      };
+      
+      if (data.workspaceId && data.workspaceId.trim()) {
+        payload.workspaceId = data.workspaceId;
+      }
+      
+      return apiRequest("POST", "/api/reminders", payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/reminders"] });
