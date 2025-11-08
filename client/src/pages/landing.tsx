@@ -164,7 +164,6 @@ export default function Landing() {
 
           <div className="mb-16 mt-20">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Judging Criteria</h2>
               <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
                 How Fusion.AI excels in Innovation, Human-AI Interaction, and Real-World Utility
               </p>
