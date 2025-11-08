@@ -12,6 +12,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (November 8, 2025)
 
+**Landing Page Enhancements**
+- Added lavender color scheme for sidebar in light theme (280 70% 97% background, 280 30% 88% border)
+- Added "Project Overview" button next to "Get Started" button with smooth scroll functionality
+- Created comprehensive Project Overview section featuring:
+  - Three panel cards (Coder, Artist, Tutor) with descriptions
+  - Key Features grid highlighting Cross-Panel Synchronization, In-App Reminders, Persistent Workspaces, and Secure Authentication
+  - Call-to-action button for starting with the platform
+- All interactive elements include proper data-testid attributes for testing
+
 **Sidebar UI Improvements**
 - Moved collapse/expand button into sidebar header next to Fusion.AI logo for better accessibility
 - Reduced Fusion.AI text size in sidebar to accommodate the collapse button
