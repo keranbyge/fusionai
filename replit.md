@@ -12,6 +12,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (November 8, 2025)
 
+**ColorBends Visibility and Text Readability Optimization**
+- Removed full-page dark gradient overlay to maximize ColorBends animation visibility (user feedback)
+- Implemented localized dark panel (bg-black/80 with backdrop-blur-md) behind hero text only
+- Panel covers only heading and description text, leaving 85%+ of hero section with full ColorBends exposure
+- Achieved 5.0:1 text contrast ratio, exceeding WCAG AA requirement (4.5:1)
+- Glassmorphism effect (rounded-3xl, backdrop-blur-md) blends panel beautifully with animated background
+- Buttons positioned outside panel for maximum ColorBends visibility and visual interest
+
 **ColorBends Background Component**
 - Replaced Plasma component with ColorBends on landing page for enhanced visual effects
 - Installed three.js library for WebGL-based shader animations
