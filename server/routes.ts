@@ -152,7 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       
       // Verify ownership
-      const existing = await storage.getWorkspaceById(id);
+      const existing = await storage.getWorkspace(id);
       if (!existing) {
         return res.status(404).json({ error: "Workspace not found" });
       }
@@ -176,7 +176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       
       // Verify ownership
-      const existing = await storage.getWorkspaceById(id);
+      const existing = await storage.getWorkspace(id);
       if (!existing) {
         return res.status(404).json({ error: "Workspace not found" });
       }
@@ -201,7 +201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { workspaceId, panelType } = req.params;
       
       // Verify workspace ownership
-      const workspace = await storage.getWorkspaceById(workspaceId);
+      const workspace = await storage.getWorkspace(workspaceId);
       if (!workspace) {
         return res.status(404).json({ error: "Workspace not found" });
       }
@@ -223,7 +223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { workspaceId, message } = req.body;
       
       // Verify workspace ownership
-      const workspace = await storage.getWorkspaceById(workspaceId);
+      const workspace = await storage.getWorkspace(workspaceId);
       if (!workspace) {
         return res.status(404).json({ error: "Workspace not found" });
       }
@@ -281,7 +281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { workspaceId, prompt } = req.body;
       
       // Verify workspace ownership
-      const workspace = await storage.getWorkspaceById(workspaceId);
+      const workspace = await storage.getWorkspace(workspaceId);
       if (!workspace) {
         return res.status(404).json({ error: "Workspace not found" });
       }
@@ -327,7 +327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { workspaceId, message } = req.body;
       
       // Verify workspace ownership
-      const workspace = await storage.getWorkspaceById(workspaceId);
+      const workspace = await storage.getWorkspace(workspaceId);
       if (!workspace) {
         return res.status(404).json({ error: "Workspace not found" });
       }
@@ -397,7 +397,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { workspaceId } = req.params;
       
       // Verify workspace ownership
-      const workspace = await storage.getWorkspaceById(workspaceId);
+      const workspace = await storage.getWorkspace(workspaceId);
       if (!workspace) {
         return res.status(404).json({ error: "Workspace not found" });
       }
