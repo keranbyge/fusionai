@@ -193,17 +193,26 @@ export default function StatsPage() {
               <CardTitle>Clarity Trend (Last 7 Prompts)</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-48 flex items-end gap-2">
-                {stats.clarityTrend.map((score, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                    <div 
-                      className="w-full bg-primary rounded-t"
-                      style={{ height: `${score}%` }}
-                    />
-                    <span className="text-xs text-muted-foreground">{i + 1}</span>
+              {stats.clarityTrend.length === 0 ? (
+                <div className="h-48 flex items-center justify-center text-center">
+                  <div className="text-muted-foreground">
+                    <p className="text-sm">No data yet</p>
+                    <p className="text-xs mt-1">Start chatting with AI to see your clarity trend!</p>
                   </div>
-                ))}
-              </div>
+                </div>
+              ) : (
+                <div className="h-48 flex items-end gap-2">
+                  {stats.clarityTrend.map((score, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                      <div 
+                        className="w-full bg-primary rounded-t"
+                        style={{ height: `${score}%` }}
+                      />
+                      <span className="text-xs text-muted-foreground">{i + 1}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
