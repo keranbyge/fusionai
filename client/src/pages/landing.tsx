@@ -43,10 +43,7 @@ export default function Landing() {
             <br />
             <span className="font-nabla">Polaris School of Technology</span>
           </h1>
-          <p className="text-xl md:text-2xl mt-8 text-white/90 max-w-3xl mx-auto">
-            A Human + AI Co-Creation Platform where you collaborate with AI for
-            coding, creative art, and adaptive tutoring
-          </p>
+          <p className="md:text-2xl mt-8 text-white/90 max-w-3xl mx-auto font-bold text-[19px] text-center">A Human + AI Co-Creation Platform where you collaborate with AI for coding, creative art, and adaptive tutoring - by TEAM AURACODE</p>
           <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
             <Link href="/auth">
               <Button
