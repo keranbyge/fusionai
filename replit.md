@@ -12,6 +12,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (November 8, 2025)
 
+**ColorBends Background Component**
+- Replaced Plasma component with ColorBends on landing page for enhanced visual effects
+- Installed three.js library for WebGL-based shader animations
+- Created ColorBends component with custom GLSL shaders for animated gradient backgrounds
+- Features: mouse-interactive parallax, customizable colors (pink, purple, cyan), rotation, warp effects, and noise
+- Fully configurable with props for speed, scale, frequency, warp strength, and transparency
+
 **Reminder Creation Bug Fix**
 - Fixed "Failed to create reminder" error by updating insertReminderSchema to accept ISO datetime strings
 - Schema now properly transforms ISO string dates to Date objects for backend validation
