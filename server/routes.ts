@@ -4,8 +4,9 @@ import { storage } from "./storage";
 import { insertWorkspaceSchema, insertMessageSchema, insertDiagramSchema } from "@shared/schema";
 import OpenAI from "openai";
 
+// Using OpenRouter API with the user's API key
 const openai = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY, // User provided OpenRouter key stored as OPENAI_API_KEY
   baseURL: "https://openrouter.ai/api/v1",
 });
 
@@ -250,7 +251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         size: "1024x1024",
       });
 
-      const imageUrl = imageResponse.data[0]?.url;
+      const imageUrl = imageResponse.data?.[0]?.url;
 
       if (!imageUrl) {
         console.error("No image URL in response");
@@ -261,7 +262,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ imageUrl });
     } catch (error) {
       console.error("Error generating image:", error);
-      res.status(500).json({ error: "Failed to generate image", message: error.message });
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      res.status(500).json({ error: "Failed to generate image", message: errorMessage });
     }
   });
 

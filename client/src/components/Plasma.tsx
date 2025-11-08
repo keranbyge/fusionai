@@ -107,13 +107,24 @@ export const Plasma: React.FC<PlasmaProps> = ({
 
     const directionMultiplier = direction === 'reverse' ? -1.0 : 1.0;
 
-    const renderer = new Renderer({
-      webgl: 2,
-      alpha: true,
-      antialias: false,
-      dpr: Math.min(window.devicePixelRatio || 1, 2)
-    });
+    let renderer;
+    try {
+      renderer = new Renderer({
+        webgl: 2,
+        alpha: true,
+        antialias: false,
+        dpr: Math.min(window.devicePixelRatio || 1, 2)
+      });
+    } catch (error) {
+      console.warn('WebGL not supported, skipping Plasma animation');
+      return;
+    }
+
     const gl = renderer.gl;
+    if (!gl) {
+      console.warn('WebGL context not available, skipping Plasma animation');
+      return;
+    }
     const canvas = gl.canvas as HTMLCanvasElement;
     canvas.style.display = 'block';
     canvas.style.width = '100%';
