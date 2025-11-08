@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Code2, X, Send, Mic, MicOff, BookOpen, Bell, RefreshCw } from "lucide-react";
+import { Code2, X, Send, Mic, MicOff, BookOpen, Bell, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -59,6 +59,30 @@ export function CoderPanel({ workspaceId, onClose }: CoderPanelProps) {
       toast({
         title: "Sync failed",
         description: error.message || "Could not sync to Artist Canvas. Try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMessageMutation = useMutation({
+    mutationFn: async (messageId: string) => {
+      const res = await apiRequest("DELETE", `/api/messages/${messageId}`, {
+        workspaceId,
+        panelType: "coder",
+      });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces", workspaceId, "messages", "coder"] });
+      toast({
+        title: "Message deleted",
+        description: "The message and its reply have been removed.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Delete failed",
+        description: error.message || "Could not delete the message. Try again.",
         variant: "destructive",
       });
     },
@@ -160,15 +184,27 @@ export function CoderPanel({ workspaceId, onClose }: CoderPanelProps) {
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} group`}
             >
               <Card
-                className={`px-4 py-3 max-w-[80%] border-white/20 ${
+                className={`px-4 py-3 max-w-[80%] border-white/20 relative ${
                   message.role === "user"
                     ? "bg-blue-500/20 backdrop-blur-md text-white border-blue-400/30"
                     : "bg-white/10 backdrop-blur-md border-white/20"
                 }`}
               >
+                {message.role === "user" && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500/90 hover:bg-red-600 text-white"
+                    onClick={() => deleteMessageMutation.mutate(message.id)}
+                    disabled={deleteMessageMutation.isPending}
+                    data-testid={`button-delete-message-${message.id}`}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
                 <div className="text-sm prose prose-sm dark:prose-invert max-w-none">
                   <ReactMarkdown>{message.content}</ReactMarkdown>
                 </div>
