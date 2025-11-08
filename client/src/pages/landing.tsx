@@ -37,7 +37,7 @@ export default function Landing() {
         </div>
         <div className="relative z-20 text-center px-6 max-w-5xl mx-auto">
           <h1 className="text-4xl md:text-6xl font-bold text-white">
-            <span className="font-sixtyfour text-5xl">Fusion.AI</span><br/>
+            <span className="font-sixtyfour text-5xl">Fusion AI</span><br/>
             <br />
             <span className="font-nabla">Replit x Vibeathon</span>
             <br />
