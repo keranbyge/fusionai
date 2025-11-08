@@ -50,6 +50,18 @@ export const diagrams = pgTable("diagrams", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const reminders = pgTable("reminders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  workspaceId: varchar("workspace_id"),
+  title: text("title").notNull(),
+  description: text("description"),
+  reminderDate: timestamp("reminder_date").notNull(),
+  googleCalendarEventId: text("google_calendar_event_id"),
+  completed: boolean("completed").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Insert schemas - omit password hash from user responses
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -72,6 +84,11 @@ export const insertDiagramSchema = createInsertSchema(diagrams).omit({
   createdAt: true,
 });
 
+export const insertReminderSchema = createInsertSchema(reminders).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Safe user schema - excludes password hash
 export const safeUserSchema = createInsertSchema(users).omit({
   password: true,
@@ -86,3 +103,5 @@ export type Message = typeof messages.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Diagram = typeof diagrams.$inferSelect;
 export type InsertDiagram = z.infer<typeof insertDiagramSchema>;
+export type Reminder = typeof reminders.$inferSelect;
+export type InsertReminder = z.infer<typeof insertReminderSchema>;

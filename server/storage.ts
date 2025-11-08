@@ -8,10 +8,13 @@ import {
   type InsertMessage,
   type Diagram,
   type InsertDiagram,
+  type Reminder,
+  type InsertReminder,
   users,
   workspaces,
   messages,
   diagrams,
+  reminders,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, asc } from "drizzle-orm";
@@ -36,6 +39,13 @@ export interface IStorage {
   getDiagram(id: string): Promise<Diagram | undefined>;
   createDiagram(diagram: InsertDiagram): Promise<Diagram>;
   deleteDiagram(id: string): Promise<boolean>;
+  
+  getRemindersByUserId(userId: string): Promise<Reminder[]>;
+  getUpcomingReminders(userId: string): Promise<Reminder[]>;
+  getReminder(id: string): Promise<Reminder | undefined>;
+  createReminder(reminder: InsertReminder): Promise<Reminder>;
+  updateReminder(id: string, updates: Partial<InsertReminder>): Promise<Reminder | undefined>;
+  deleteReminder(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -159,6 +169,55 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDiagram(id: string): Promise<boolean> {
     const result = await db.delete(diagrams).where(eq(diagrams.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  async getRemindersByUserId(userId: string): Promise<Reminder[]> {
+    return await db
+      .select()
+      .from(reminders)
+      .where(eq(reminders.userId, userId))
+      .orderBy(asc(reminders.reminderDate));
+  }
+
+  async getUpcomingReminders(userId: string): Promise<Reminder[]> {
+    const now = new Date();
+    return await db
+      .select()
+      .from(reminders)
+      .where(
+        and(
+          eq(reminders.userId, userId),
+          eq(reminders.completed, false)
+        )
+      )
+      .orderBy(asc(reminders.reminderDate));
+  }
+
+  async getReminder(id: string): Promise<Reminder | undefined> {
+    const [reminder] = await db.select().from(reminders).where(eq(reminders.id, id));
+    return reminder;
+  }
+
+  async createReminder(insertReminder: InsertReminder): Promise<Reminder> {
+    const [reminder] = await db
+      .insert(reminders)
+      .values(insertReminder)
+      .returning();
+    return reminder;
+  }
+
+  async updateReminder(id: string, updates: Partial<InsertReminder>): Promise<Reminder | undefined> {
+    const [reminder] = await db
+      .update(reminders)
+      .set(updates)
+      .where(eq(reminders.id, id))
+      .returning();
+    return reminder;
+  }
+
+  async deleteReminder(id: string): Promise<boolean> {
+    const result = await db.delete(reminders).where(eq(reminders.id, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 }

@@ -9,6 +9,7 @@ import AuthPage from "@/pages/auth";
 import OnboardingPage from "@/pages/onboarding";
 import WorkspacePage from "@/pages/workspace";
 import StatsPage from "@/pages/stats";
+import RemindersPage from "@/pages/reminders";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/onboarding" component={OnboardingPage} />
       <Route path="/workspace" component={WorkspacePage} />
       <Route path="/stats" component={StatsPage} />
+      <Route path="/reminders" component={RemindersPage} />
       <Route component={NotFound} />
     </Switch>
   );

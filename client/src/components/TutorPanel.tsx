@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { voiceManager } from "@/lib/voiceManager";
 import ReactMarkdown from "react-markdown";
-import type { Message, Diagram } from "@shared/schema";
+import type { Message, Diagram, Reminder } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 
 interface TutorPanelProps {
@@ -55,6 +55,11 @@ export function TutorPanel({ workspaceId, onClose }: TutorPanelProps) {
       if (!res.ok) throw new Error("Failed to fetch diagrams");
       return res.json();
     },
+  });
+
+  // Fetch upcoming reminders
+  const { data: reminders = [] } = useQuery<Reminder[]>({
+    queryKey: ["/api/reminders/upcoming"],
   });
 
   const sendMessageMutation = useMutation({
@@ -261,6 +266,12 @@ export function TutorPanel({ workspaceId, onClose }: TutorPanelProps) {
               {diagrams.slice(-3).length}
             </Badge>
           )}
+          {reminders.length > 0 && (
+            <Badge variant="secondary" className="h-5 gap-1 text-xs bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30">
+              <Bell className="h-2.5 w-2.5" />
+              {reminders.length}
+            </Badge>
+          )}
           {voiceMode && (
             <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded">Voice Mode</span>
           )}
@@ -289,57 +300,54 @@ export function TutorPanel({ workspaceId, onClose }: TutorPanelProps) {
 
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
         <div className="max-w-3xl mx-auto space-y-4">
-          <Card className="border-amber-400/30 bg-amber-500/10 backdrop-blur-md">
-            <CardHeader>
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Bell className="h-4 w-4 text-amber-500" />
-                Upcoming Reminders
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="p-3 rounded-lg bg-background/50 border border-amber-500/20">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">Python Tutorial - Advanced Concepts</p>
-                    <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {new Date(Date.now() + 2 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {new Date(Date.now() + 2 * 60 * 60 * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+          {reminders.length > 0 && (
+            <Card className="border-amber-400/30 bg-amber-500/10 backdrop-blur-md">
+              <CardHeader>
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-amber-500" />
+                  Upcoming Reminders ({reminders.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {reminders.slice(0, 5).map((reminder) => {
+                  const reminderDate = new Date(reminder.reminderDate);
+                  const now = new Date();
+                  const hoursUntil = Math.floor((reminderDate.getTime() - now.getTime()) / (1000 * 60 * 60));
+                  const isPastDue = hoursUntil < 0;
+                  
+                  return (
+                    <div key={reminder.id} className={`p-3 rounded-lg bg-background/50 border ${isPastDue ? 'border-destructive/30' : 'border-amber-500/20'}`}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{reminder.title}</p>
+                          {reminder.description && (
+                            <p className="text-xs text-muted-foreground mt-1">{reminder.description}</p>
+                          )}
+                          <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {reminderDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {reminderDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                            {isPastDue ? (
+                              <span className="text-destructive font-medium">Past Due</span>
+                            ) : hoursUntil < 24 && (
+                              <span className="text-amber-600 dark:text-amber-400 font-medium">
+                                In {hoursUntil} hour{hoursUntil !== 1 ? 's' : ''}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <Button size="sm" variant="outline" className="shrink-0">
-                    View
-                  </Button>
-                </div>
-              </div>
-              <div className="p-3 rounded-lg bg-background/50 border border-amber-500/20">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">Python Mastery Quiz</p>
-                    <p className="text-xs text-muted-foreground mt-1">Data Types • OOP • Decorators</p>
-                    <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </div>
-                  </div>
-                  <Button size="sm" variant="outline" className="shrink-0">
-                    Start
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          )}
           {recommendations.length > 0 && (
             <Card className="bg-purple-500/10 border-purple-400/30 backdrop-blur-md">
               <CardContent className="pt-4">

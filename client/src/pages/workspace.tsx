@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
-import { Plus, ChevronLeft, ChevronRight, Edit2, Trash2, LogOut, User, BarChart3 } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Edit2, Trash2, LogOut, User, BarChart3, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -305,6 +305,12 @@ export default function WorkspacePage() {
               <Button variant="outline" size="sm" className="gap-2">
                 <BarChart3 className="h-4 w-4" />
                 View Stats
+              </Button>
+            </Link>
+            <Link href="/reminders">
+              <Button variant="outline" size="sm" className="gap-2" data-testid="button-reminders">
+                <Bell className="h-4 w-4" />
+                Reminders
               </Button>
             </Link>
           </div>

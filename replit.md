@@ -12,6 +12,21 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (November 8, 2025)
 
+**Reminders System with Tutor Integration**
+- Added complete reminders feature with dedicated page for creating and managing reminders
+- Database schema: New `reminders` table with title, description, datetime, Google Calendar event ID, workspace association, and completion status
+- Backend API: Full CRUD operations (GET, POST, PATCH, DELETE) with user authentication
+- Reminders page UI: Form to create reminders, categorized lists (upcoming, past due, completed), sync to Google Calendar button (placeholder for OAuth)
+- Navigation: "Reminders" button in workspace header for easy access
+- Tutor AI integration: Automatically fetches upcoming reminders and includes them in conversation context to proactively alert users
+- Visual indicators: Amber badge in Tutor panel header showing count of upcoming reminders
+- Dynamic reminder display: Tutor panel shows up to 5 upcoming reminders with time-until information and past-due warnings
+
+**Font Update**
+- Changed "Fusion.AI" logo font from "Press Start 2P" to "Sixtyfour" for a retro-tech aesthetic
+
+**Previous Updates**
+
 **Message Deletion Feature**
 - Added ability to delete messages from Coder and Tutor panels
 - Delete button appears on hover over user messages (small red trash icon in top-right corner)

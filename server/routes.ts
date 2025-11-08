@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertWorkspaceSchema, insertMessageSchema, insertDiagramSchema, insertUserSchema } from "@shared/schema";
+import { insertWorkspaceSchema, insertMessageSchema, insertDiagramSchema, insertUserSchema, insertReminderSchema } from "@shared/schema";
 import { requireAuth } from "./auth";
 import OpenAI from "openai";
 import bcrypt from "bcrypt";
@@ -706,8 +706,14 @@ Only respond with valid Mermaid code, no explanations.`,
       const diagrams = await storage.getDiagramsByWorkspace(workspaceId);
       const recentDiagrams = diagrams.slice(-3);
 
-      // Build system message with context from both panels
-      let systemMessage = "You are a personalized learning assistant with access to the user's workspace. Provide clear explanations, tutorials, and guidance. Be patient and adapt your teaching to the learner's level.";
+      // Get upcoming reminders for the user
+      const upcomingReminders = await storage.getUpcomingReminders(req.session.userId!);
+      const now = new Date();
+      const soon = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Next 24 hours
+      const urgentReminders = upcomingReminders.filter(r => new Date(r.reminderDate) <= soon);
+
+      // Build system message with context from both panels and reminders
+      let systemMessage = "You are a personalized learning assistant with access to the user's workspace and their reminders. Provide clear explanations, tutorials, and guidance. Be patient and adapt your teaching to the learner's level.";
       
       if (recentCoderContext.length > 0) {
         const contextSummary = recentCoderContext.map(m => `${m.role}: ${m.content.substring(0, 200)}`).join("\n");
@@ -717,6 +723,15 @@ Only respond with valid Mermaid code, no explanations.`,
       if (recentDiagrams.length > 0) {
         const diagramSummary = recentDiagrams.map(d => `Diagram: ${d.prompt}`).join("\n");
         systemMessage += `\n\nThe user has been working with these visual diagrams:\n${diagramSummary}`;
+      }
+
+      if (urgentReminders.length > 0) {
+        const reminderSummary = urgentReminders.map(r => {
+          const timeUntil = new Date(r.reminderDate).getTime() - now.getTime();
+          const hoursUntil = Math.floor(timeUntil / (1000 * 60 * 60));
+          return `"${r.title}" - Due in ${hoursUntil} hours${r.description ? ` (${r.description.substring(0, 100)})` : ''}`;
+        }).join("\n");
+        systemMessage += `\n\nIMPORTANT: The user has ${urgentReminders.length} upcoming reminder(s) in the next 24 hours:\n${reminderSummary}\n\nIf appropriate to the conversation, gently remind the user about these tasks and offer to help them prepare or complete them.`;
       }
 
       // Call OpenRouter
@@ -804,6 +819,128 @@ Only respond with valid Mermaid code, no explanations.`,
     } catch (error) {
       console.error("Error deleting diagram:", error);
       res.status(500).json({ error: "Failed to delete diagram" });
+    }
+  });
+
+  // Get all reminders for the authenticated user
+  app.get("/api/reminders", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId!;
+      const reminders = await storage.getRemindersByUserId(userId);
+      res.json(reminders);
+    } catch (error) {
+      console.error("Error fetching reminders:", error);
+      res.status(500).json({ error: "Failed to fetch reminders" });
+    }
+  });
+
+  // Get upcoming reminders for the authenticated user
+  app.get("/api/reminders/upcoming", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId!;
+      const reminders = await storage.getUpcomingReminders(userId);
+      res.json(reminders);
+    } catch (error) {
+      console.error("Error fetching upcoming reminders:", error);
+      res.status(500).json({ error: "Failed to fetch upcoming reminders" });
+    }
+  });
+
+  // Create a new reminder
+  app.post("/api/reminders", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId!;
+      const validatedData = insertReminderSchema.parse({
+        ...req.body,
+        userId,
+      });
+
+      const reminder = await storage.createReminder(validatedData);
+      res.json(reminder);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid reminder data", details: error.errors });
+      }
+      console.error("Error creating reminder:", error);
+      res.status(500).json({ error: "Failed to create reminder" });
+    }
+  });
+
+  // Update a reminder (e.g., mark as completed)
+  app.patch("/api/reminders/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.session.userId!;
+
+      const existingReminder = await storage.getReminder(id);
+      if (!existingReminder) {
+        return res.status(404).json({ error: "Reminder not found" });
+      }
+
+      if (existingReminder.userId !== userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const updated = await storage.updateReminder(id, req.body);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating reminder:", error);
+      res.status(500).json({ error: "Failed to update reminder" });
+    }
+  });
+
+  // Delete a reminder
+  app.delete("/api/reminders/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.session.userId!;
+
+      const existingReminder = await storage.getReminder(id);
+      if (!existingReminder) {
+        return res.status(404).json({ error: "Reminder not found" });
+      }
+
+      if (existingReminder.userId !== userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const deleted = await storage.deleteReminder(id);
+      if (deleted) {
+        res.json({ success: true });
+      } else {
+        res.status(404).json({ error: "Reminder not found" });
+      }
+    } catch (error) {
+      console.error("Error deleting reminder:", error);
+      res.status(500).json({ error: "Failed to delete reminder" });
+    }
+  });
+
+  // Sync reminder to Google Calendar
+  app.post("/api/reminders/:id/sync-to-calendar", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.session.userId!;
+
+      const reminder = await storage.getReminder(id);
+      if (!reminder) {
+        return res.status(404).json({ error: "Reminder not found" });
+      }
+
+      if (reminder.userId !== userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      // TODO: Implement Google Calendar API integration
+      // For now, return a placeholder response
+      res.json({ 
+        success: true, 
+        message: "Google Calendar integration will be set up with OAuth",
+        reminder 
+      });
+    } catch (error) {
+      console.error("Error syncing to calendar:", error);
+      res.status(500).json({ error: "Failed to sync to calendar" });
     }
   });
 
