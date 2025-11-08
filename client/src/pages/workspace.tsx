@@ -189,23 +189,33 @@ export default function WorkspacePage() {
     <div className="flex h-screen bg-background">
       <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} border-r border-white/10 bg-white/5 backdrop-blur-xl flex flex-col transition-all duration-300`}>
         <div className="p-4 border-b border-white/10 flex items-center justify-between gap-2">
-          {!sidebarCollapsed && (
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-sidebar-primary" />
-              <span className="font-bold font-sixtyfour">Fusion.AI</span>
-            </div>
-          )}
-          <div className="flex items-center gap-1">
-            {!sidebarCollapsed && <ThemeToggle />}
+          {!sidebarCollapsed ? (
+            <>
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-sidebar-primary" />
+                <span className="font-bold font-sixtyfour text-sm">Fusion.AI</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="h-8 w-8"
+                data-testid="button-collapse-sidebar"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            </>
+          ) : (
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="h-8 w-8"
+              className="h-8 w-8 mx-auto"
+              data-testid="button-expand-sidebar"
             >
-              {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              <ChevronRight className="h-4 w-4" />
             </Button>
-          </div>
+          )}
         </div>
 
         {!sidebarCollapsed && (
@@ -314,34 +324,37 @@ export default function WorkspacePage() {
               </Button>
             </Link>
           </div>
-          {activeWorkspace && (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => togglePanel("coder")}
-                data-testid="toggle-coder"
-              >
-                Coder {!panelStates.coder && "(Hidden)"}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => togglePanel("artist")}
-                data-testid="toggle-artist"
-              >
-                Artist {!panelStates.artist && "(Hidden)"}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => togglePanel("tutor")}
-                data-testid="toggle-tutor"
-              >
-                Tutor {!panelStates.tutor && "(Hidden)"}
-              </Button>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {activeWorkspace && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => togglePanel("coder")}
+                  data-testid="toggle-coder"
+                >
+                  Coder {!panelStates.coder && "(Hidden)"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => togglePanel("artist")}
+                  data-testid="toggle-artist"
+                >
+                  Artist {!panelStates.artist && "(Hidden)"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => togglePanel("tutor")}
+                  data-testid="toggle-tutor"
+                >
+                  Tutor {!panelStates.tutor && "(Hidden)"}
+                </Button>
+              </>
+            )}
+            <ThemeToggle />
+          </div>
         </header>
 
         {!activeWorkspace ? (
