@@ -278,7 +278,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Artist AI endpoint (protected)
   app.post("/api/ai/artist", requireAuth, async (req, res) => {
     try {
-      const { workspaceId, prompt } = req.body;
+      const { workspaceId, prompt, coderContext } = req.body;
       
       // Verify workspace ownership
       const workspace = await storage.getWorkspace(workspaceId);
@@ -287,6 +287,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       if (workspace.userId !== req.session.userId) {
         return res.status(403).json({ error: "Access denied" });
+      }
+
+      // Build enhanced prompt with Coder context if available
+      let enhancedPrompt = prompt;
+      if (coderContext) {
+        enhancedPrompt = `Based on this coding discussion:\n\n${coderContext}\n\nCreate a diagram for: ${prompt}`;
       }
 
       // Call OpenRouter to generate Mermaid diagram
@@ -299,7 +305,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
           {
             role: "user",
-            content: prompt,
+            content: enhancedPrompt,
           },
         ],
         temperature: 0.5,
@@ -318,6 +324,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error in artist AI:", error);
       res.status(500).json({ error: "Failed to generate diagram" });
+    }
+  });
+
+  // Sync Coder to Artist endpoint (protected)
+  app.post("/api/ai/sync-to-artist", requireAuth, async (req, res) => {
+    try {
+      const { workspaceId } = req.body;
+      
+      // Verify workspace ownership
+      const workspace = await storage.getWorkspace(workspaceId);
+      if (!workspace) {
+        return res.status(404).json({ error: "Workspace not found" });
+      }
+      if (workspace.userId !== req.session.userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      // Get recent Coder conversation (last 3 messages for context)
+      const coderHistory = await storage.getMessagesByWorkspaceAndPanel(workspaceId, "coder");
+      if (coderHistory.length === 0) {
+        return res.status(400).json({ error: "No coder messages to sync" });
+      }
+
+      const recentMessages = coderHistory.slice(-3);
+      const latestAIResponse = recentMessages.filter(m => m.role === "assistant").pop();
+      
+      if (!latestAIResponse) {
+        return res.status(400).json({ error: "No AI responses found in coder panel" });
+      }
+
+      // Create a context summary from recent messages
+      const context = recentMessages.map(m => `${m.role === "user" ? "User" : "AI"}: ${m.content.substring(0, 500)}`).join("\n\n");
+
+      // Ask AI to analyze the conversation and create a diagram prompt
+      const analysisCompletion = await openai.chat.completions.create({
+        model: "openai/gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert at analyzing coding conversations and creating diagram prompts. Based on the conversation, suggest the most appropriate diagram type (flowchart, sequence diagram, class diagram, state diagram, etc.) and create a detailed prompt for it. Keep your response under 200 words and be specific about what should be visualized.",
+          },
+          {
+            role: "user",
+            content: `Analyze this coding conversation and create a diagram prompt that visualizes the key concept:\n\n${context}`,
+          },
+        ],
+        temperature: 0.7,
+      });
+
+      const diagramPrompt = analysisCompletion.choices[0]?.message?.content || "Create a flowchart showing the code logic discussed";
+
+      // Generate the Mermaid diagram
+      const diagramCompletion = await openai.chat.completions.create({
+        model: "openai/gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert at creating diagrams using Mermaid.js syntax. When given a description, generate valid Mermaid.js code for flowcharts, sequence diagrams, class diagrams, or other diagram types. Only respond with the Mermaid code, no explanations or markdown code blocks.",
+          },
+          {
+            role: "user",
+            content: `${diagramPrompt}\n\nContext from coding discussion:\n${latestAIResponse.content.substring(0, 800)}`,
+          },
+        ],
+        temperature: 0.5,
+      });
+
+      const mermaidCode = diagramCompletion.choices[0]?.message?.content || "graph TD\nA[Error] --> B[Could not generate diagram]";
+
+      // Save diagram with the generated prompt
+      const diagram = await storage.createDiagram({
+        workspaceId,
+        prompt: `Auto-synced: ${diagramPrompt.substring(0, 200)}`,
+        mermaidCode,
+      });
+
+      res.json(diagram);
+    } catch (error) {
+      console.error("Error in sync-to-artist:", error);
+      res.status(500).json({ error: "Failed to sync to artist" });
     }
   });
 
@@ -350,12 +436,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const coderHistory = await storage.getMessagesByWorkspaceAndPanel(workspaceId, "coder");
       const recentCoderContext = coderHistory.slice(-5);
 
-      // Build system message with context
-      let systemMessage = "You are a personalized learning assistant. Provide clear explanations, tutorials, and guidance. Be patient and adapt your teaching to the learner's level.";
+      // Get context from artist panel (last 3 diagrams)
+      const diagrams = await storage.getDiagramsByWorkspace(workspaceId);
+      const recentDiagrams = diagrams.slice(-3);
+
+      // Build system message with context from both panels
+      let systemMessage = "You are a personalized learning assistant with access to the user's workspace. Provide clear explanations, tutorials, and guidance. Be patient and adapt your teaching to the learner's level.";
       
       if (recentCoderContext.length > 0) {
         const contextSummary = recentCoderContext.map(m => `${m.role}: ${m.content.substring(0, 200)}`).join("\n");
         systemMessage += `\n\nContext from the user's recent coding work:\n${contextSummary}`;
+      }
+
+      if (recentDiagrams.length > 0) {
+        const diagramSummary = recentDiagrams.map(d => `Diagram: ${d.prompt}`).join("\n");
+        systemMessage += `\n\nThe user has been working with these visual diagrams:\n${diagramSummary}`;
       }
 
       // Call OpenRouter

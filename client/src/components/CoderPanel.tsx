@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Code2, X, Send, Mic, MicOff, BookOpen, Bell } from "lucide-react";
+import { Code2, X, Send, Mic, MicOff, BookOpen, Bell, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,6 +9,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { voiceManager } from "@/lib/voiceManager";
 import ReactMarkdown from "react-markdown";
 import type { Message } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 
 interface CoderPanelProps {
   workspaceId: string;
@@ -20,6 +21,7 @@ export function CoderPanel({ workspaceId, onClose }: CoderPanelProps) {
   const [isListening, setIsListening] = useState(voiceManager.getIsListening());
   const [quizzes, setQuizzes] = useState<Array<{ title: string; topics: string[] }>>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   const { data: messages = [] } = useQuery<Message[]>({
     queryKey: ["/api/workspaces", workspaceId, "messages", "coder"],
@@ -38,6 +40,27 @@ export function CoderPanel({ workspaceId, onClose }: CoderPanelProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/workspaces", workspaceId, "messages", "coder"] });
       setInput("");
+    },
+  });
+
+  const syncToArtistMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/ai/sync-to-artist", { workspaceId });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/workspaces/${workspaceId}/diagrams`] });
+      toast({
+        title: "Synced to Artist Canvas",
+        description: "A diagram has been generated from your latest code discussion.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Sync failed",
+        description: error.message || "Could not sync to Artist Canvas. Try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -102,15 +125,28 @@ export function CoderPanel({ workspaceId, onClose }: CoderPanelProps) {
           <Code2 className="h-4 w-4 text-primary" />
           <span className="font-semibold text-sm">Coder</span>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          data-testid="button-close-coder"
-          onClick={onClose}
-        >
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5"
+            onClick={() => syncToArtistMutation.mutate()}
+            disabled={syncToArtistMutation.isPending || messages.length === 0}
+            data-testid="button-sync-to-artist"
+          >
+            <RefreshCw className={`h-3 w-3 ${syncToArtistMutation.isPending ? 'animate-spin' : ''}`} />
+            <span className="text-xs">Sync to Artist</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            data-testid="button-close-coder"
+            onClick={onClose}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </header>
 
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
