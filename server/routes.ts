@@ -15,26 +15,163 @@ const openai = new OpenAI({
 
 const SALT_ROUNDS = 12;
 
-// Helper function to fix common Mermaid syntax errors
+// Helper function to extract and fix Mermaid code from AI output
 function fixMermaidSyntax(mermaidCode: string): string {
-  // Fix unquoted node labels containing spaces
-  // Pattern: A[text with spaces] -> A["text with spaces"]
-  // But avoid: A["already quoted"] or A[SimpleWord]
+  let extracted = mermaidCode.trim();
   
-  let fixed = mermaidCode;
+  // Step 1: Extract content from markdown code fences if present
+  const fenceMatch = extracted.match(/```(?:mermaid)?\s*\n?([\s\S]*?)\n?```/i);
+  if (fenceMatch) {
+    extracted = fenceMatch[1].trim();
+  }
   
-  // Fix node definitions with unquoted text containing spaces
-  // Match patterns like: A[text with spaces] or B(text with spaces) or C{text with spaces}
-  fixed = fixed.replace(/([A-Za-z0-9_]+)([\[\(\{])([^"\]\)\}]*\s[^"\]\)\}]*)([\]\)\}])/g, (match, nodeId, openBracket, text, closeBracket) => {
-    // Only wrap if not already quoted
+  // Step 2: Find diagram type and extract from there
+  const diagramTypes = [
+    'graph', 'flowchart', 'sequenceDiagram', 'classDiagram',
+    'stateDiagram', 'stateDiagram-v2', 'erDiagram', 'journey',
+    'gantt', 'pie', 'quadrantChart', 'requirementDiagram',
+    'gitGraph', 'mindmap', 'timeline', 'zenuml', 'sankey'
+  ];
+  
+  const lines = extracted.split('\n');
+  let diagramStart = -1;
+  
+  // Find first line with diagram type
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim();
+    if (diagramTypes.some(type => trimmed.toLowerCase().startsWith(type.toLowerCase()))) {
+      diagramStart = i;
+      break;
+    }
+  }
+  
+  if (diagramStart === -1) {
+    // No diagram type found, return as-is with label fixes
+    return fixLabels(extracted);
+  }
+  
+  // Step 3: Extract diagram lines using Mermaid syntax rules
+  const diagramLines = [lines[diagramStart]];
+  let indentLevel = 0;
+  
+  for (let i = diagramStart + 1; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    
+    // Stop at completely empty lines followed by prose or another diagram type
+    if (trimmed === '') {
+      // Check next non-empty line
+      let nextNonEmpty = '';
+      for (let j = i + 1; j < lines.length; j++) {
+        const next = lines[j].trim();
+        if (next !== '') {
+          nextNonEmpty = next;
+          break;
+        }
+      }
+      
+      // If next line looks like prose (starts with lowercase, no Mermaid syntax)
+      if (nextNonEmpty && /^[a-z]/.test(nextNonEmpty) && !isMermaidSyntax(nextNonEmpty)) {
+        break;
+      }
+      
+      // Include blank line (might be intentional formatting)
+      diagramLines.push(line);
+      continue;
+    }
+    
+    // Check if this line is valid Mermaid syntax
+    if (isMermaidSyntax(trimmed)) {
+      diagramLines.push(line);
+      
+      // Track subgraph/end blocks
+      if (/^\s*subgraph/.test(trimmed)) indentLevel++;
+      if (/^\s*end\s*$/.test(trimmed)) indentLevel--;
+    } else {
+      // Not Mermaid syntax - stop here
+      break;
+    }
+  }
+  
+  const fixed = diagramLines.join('\n').trim();
+  return fixLabels(fixed);
+}
+
+// Check if a line contains valid Mermaid syntax
+function isMermaidSyntax(line: string): boolean {
+  if (!line) return false;
+  
+  // Diagram type declarations
+  if (/^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|pie|quadrantChart|requirementDiagram|gitGraph|mindmap|timeline|zenuml|sankey)/i.test(line)) {
+    return true;
+  }
+  
+  // Directives and keywords
+  if (/^\s*(subgraph|end|style|classDef|class|click|linkStyle|direction|title|section|accTitle|accDescr|%%)/i.test(line)) {
+    return true;
+  }
+  
+  // Sequence diagram keywords
+  if (/^(participant|actor|activate|deactivate|note|loop|alt|opt|par|and|rect|critical|break|autonumber)/i.test(line)) {
+    return true;
+  }
+  
+  // State diagram keywords and special syntax
+  if (/^(state|hide empty description|\[\*\])/i.test(line)) {
+    return true;
+  }
+  
+  // Comments
+  if (/^\s*%%/.test(line)) {
+    return true;
+  }
+  
+  // Node definitions: A[label], B(label), C{label}, D((label)), E[[label]], etc.
+  if (/^[A-Za-z0-9_]+\s*[\[\(\{]/.test(line)) {
+    return true;
+  }
+  
+  // Links and arrows (comprehensive list for flowchart, sequence, class diagrams)
+  // Matches: -->, --->, -.->,-.->, ==>, ==>>, ->>, ->>,-x, --x, --, etc.
+  // Also matches links with text: -- text -->, -. text .->
+  if (/[A-Za-z0-9_]+\s*(--|==|\.\.|-\.)/.test(line)) {
+    return true;
+  }
+  
+  // Sequence diagram message format: A->>B, A-->>B, A-)B, etc.
+  if (/[A-Za-z0-9_]+\s*(->>|-->>|-\)|--\)|-x|--x|\+|-)/.test(line)) {
+    return true;
+  }
+  
+  // Labeled edges: |text|, ||text||
+  if (/[A-Za-z0-9_]+\s*[\|\|]/.test(line)) {
+    return true;
+  }
+  
+  // Sequence diagram actor definitions with colon
+  if (/^[A-Za-z0-9_]+\s*:/.test(line)) {
+    return true;
+  }
+  
+  // Class diagram relationships: <|--,  *--, o--, etc.
+  if (/<\|--|>\|--|\*--|o--|<\.\.|\*\.\./.test(line)) {
+    return true;
+  }
+  
+  // If none of the above explicit patterns matched, treat as prose
+  // Only return true if we found an explicit Mermaid token
+  return false;
+}
+
+// Fix unquoted labels with spaces
+function fixLabels(code: string): string {
+  return code.replace(/([A-Za-z0-9_]+)([\[\(\{])([^"\]\)\}]*\s[^"\]\)\}]*)([\]\)\}])/g, (match, nodeId, openBracket, text, closeBracket) => {
     if (!text.trim().startsWith('"')) {
       const escapedText = text.replace(/"/g, '\\"');
       return `${nodeId}${openBracket}"${escapedText}"${closeBracket}`;
     }
     return match;
   });
-  
-  return fixed;
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
