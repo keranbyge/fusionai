@@ -63,7 +63,7 @@ export default function Landing() {
               size="lg"
               variant="outline"
               onClick={scrollToOverview}
-              className="px-8 py-6 text-lg rounded-full bg-purple-500/20 backdrop-blur-md border-2 border-purple-300 text-white hover:bg-purple-500/30"
+              className="rounded-full backdrop-blur-md border-2 border-purple-300 text-white hover:bg-purple-500/30 pl-[23px] pr-[23px] text-[15px] pt-[14px] pb-[14px] bg-[#ffffff17] font-extrabold"
               data-testid="button-project-overview"
             >
               <FileText className="h-5 w-5 mr-2" />
