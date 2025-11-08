@@ -16,6 +16,8 @@ const openai = new OpenAI({
 const SALT_ROUNDS = 12;
 
 // Helper function to extract and fix Mermaid code from AI output
+// Handles: flowchart, sequence, class, state diagrams (most common types)
+// Note: gitGraph, gantt, journey, timeline have partial support - may need expansion
 function fixMermaidSyntax(mermaidCode: string): string {
   let extracted = mermaidCode.trim();
   
