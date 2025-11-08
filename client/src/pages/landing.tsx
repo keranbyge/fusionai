@@ -38,21 +38,22 @@ export default function Landing() {
             noise={0.08}
             transparent
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-background/70 z-10" />
         </div>
         <div className="relative z-20 text-center px-6 max-w-5xl mx-auto">
-          <h1 className="text-4xl md:text-6xl font-bold text-white">
-            <span className="font-sixtyfour text-5xl">Fusion.AI</span><br/>
-            <br />
-            <span className="font-nabla">Replit x Vibeathon</span>
-            <br />
-            <span className="font-nabla">Polaris School of Technology</span>
-          </h1>
-          <p className="text-xl md:text-2xl mt-8 text-white/50 max-w-3xl mx-auto">
-            A Human + AI Co-Creation Platform where you collaborate with AI for
-            coding, creative art, and adaptive tutoring
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-4">
+          <div className="bg-black/80 backdrop-blur-md rounded-3xl px-12 py-10">
+            <h1 className="text-4xl md:text-6xl font-bold text-white">
+              <span className="font-sixtyfour text-5xl">Fusion.AI</span><br/>
+              <br />
+              <span className="font-nabla">Replit x Vibeathon</span>
+              <br />
+              <span className="font-nabla">Polaris School of Technology</span>
+            </h1>
+            <p className="text-xl md:text-2xl mt-8 text-white/90 max-w-3xl mx-auto">
+              A Human + AI Co-Creation Platform where you collaborate with AI for
+              coding, creative art, and adaptive tutoring
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-4 mt-6">
             <Link href="/auth">
               <Button
                 size="lg"
