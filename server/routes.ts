@@ -15,6 +15,28 @@ const openai = new OpenAI({
 
 const SALT_ROUNDS = 12;
 
+// Helper function to fix common Mermaid syntax errors
+function fixMermaidSyntax(mermaidCode: string): string {
+  // Fix unquoted node labels containing spaces
+  // Pattern: A[text with spaces] -> A["text with spaces"]
+  // But avoid: A["already quoted"] or A[SimpleWord]
+  
+  let fixed = mermaidCode;
+  
+  // Fix node definitions with unquoted text containing spaces
+  // Match patterns like: A[text with spaces] or B(text with spaces) or C{text with spaces}
+  fixed = fixed.replace(/([A-Za-z0-9_]+)([\[\(\{])([^"\]\)\}]*\s[^"\]\)\}]*)([\]\)\}])/g, (match, nodeId, openBracket, text, closeBracket) => {
+    // Only wrap if not already quoted
+    if (!text.trim().startsWith('"')) {
+      const escapedText = text.replace(/"/g, '\\"');
+      return `${nodeId}${openBracket}"${escapedText}"${closeBracket}`;
+    }
+    return match;
+  });
+  
+  return fixed;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   
   // Authentication routes
@@ -301,7 +323,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         messages: [
           {
             role: "system",
-            content: "You are an expert at creating diagrams using Mermaid.js syntax. IMPORTANT: Always wrap node text with quotes if it contains spaces or special characters. Use proper Mermaid syntax: A[\"Text with spaces\"] instead of A[Text with spaces]. When given a description, generate valid Mermaid.js code for flowcharts, sequence diagrams, class diagrams, or other diagram types. Only respond with the Mermaid code, no explanations or markdown code blocks.",
+            content: `You are an expert at creating diagrams using Mermaid.js syntax. 
+
+CRITICAL RULES:
+1. ALWAYS wrap node text in quotes if it contains spaces
+2. Use double quotes for node labels: A["Text with spaces"]
+3. Single words can be unquoted: A[Start] is OK
+4. Multi-word text MUST be quoted: A["User Login"] not A[User Login]
+
+CORRECT Examples:
+graph TD
+    A["Start process"] --> B["Check input"]
+    B --> C{Valid?}
+    C -->|Yes| D["Process data"]
+    C -->|No| E["Show error"]
+
+flowchart LR
+    A["num1"] --> B{"Is num1 > num2?"}
+    B -->|Yes| C["num1 is largest"]
+    B -->|No| D["num2 is largest"]
+
+Only respond with valid Mermaid code, no explanations.`,
           },
           {
             role: "user",
@@ -311,7 +353,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         temperature: 0.5,
       });
 
-      const mermaidCode = completion.choices[0]?.message?.content || "graph TD\nA[Error] --> B[Could not generate diagram]";
+      const rawMermaidCode = completion.choices[0]?.message?.content || "graph TD\nA[\"Error\"] --> B[\"Could not generate diagram\"]";
+      const mermaidCode = fixMermaidSyntax(rawMermaidCode);
 
       // Save diagram
       const diagram = await storage.createDiagram({
@@ -381,7 +424,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         messages: [
           {
             role: "system",
-            content: "You are an expert at creating technical diagrams using Mermaid.js syntax. IMPORTANT: Always wrap node text with quotes if it contains spaces or special characters. Use proper Mermaid syntax: A[\"Text with spaces\"] instead of A[Text with spaces]. Create flowcharts for algorithms, class diagrams for code structure, or state diagrams for behavior. Focus on visualizing the CODE and LOGIC, not conversations. Only respond with valid Mermaid code, no explanations or markdown code blocks.",
+            content: `You are an expert at creating technical diagrams using Mermaid.js syntax.
+
+CRITICAL RULES:
+1. ALWAYS wrap node text in quotes if it contains spaces
+2. Use double quotes for node labels: A["Text with spaces"]
+3. Single words can be unquoted: A[Start] is OK
+4. Multi-word text MUST be quoted: A["User Login"] not A[User Login]
+
+CORRECT Examples:
+flowchart TD
+    A["Start"] --> B["Get two numbers"]
+    B --> C{"Compare values"}
+    C -->|num1 > num2| D["num1 is largest"]
+    C -->|num2 >= num1| E["num2 is largest"]
+
+Focus on CODE LOGIC flowcharts, not conversation diagrams.
+Only respond with valid Mermaid code, no explanations.`,
           },
           {
             role: "user",
@@ -391,7 +450,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         temperature: 0.5,
       });
 
-      const mermaidCode = diagramCompletion.choices[0]?.message?.content || "graph TD\nA[Error] --> B[Could not generate diagram]";
+      const rawMermaidCode = diagramCompletion.choices[0]?.message?.content || "graph TD\nA[\"Error\"] --> B[\"Could not generate diagram\"]";
+      const mermaidCode = fixMermaidSyntax(rawMermaidCode);
 
       // Save diagram with the generated prompt
       const diagram = await storage.createDiagram({

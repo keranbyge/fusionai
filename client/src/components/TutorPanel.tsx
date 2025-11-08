@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { GraduationCap, X, Send, Mic, MicOff, Volume2, VolumeX, Square, BookOpen, Bell, Clock, Calendar } from "lucide-react";
+import { GraduationCap, X, Send, Mic, MicOff, Volume2, VolumeX, Square, BookOpen, Bell, Clock, Calendar, Code2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { voiceManager } from "@/lib/voiceManager";
 import ReactMarkdown from "react-markdown";
-import type { Message } from "@shared/schema";
+import type { Message, Diagram } from "@shared/schema";
 
 interface TutorPanelProps {
   workspaceId: string;
@@ -30,6 +31,26 @@ export function TutorPanel({ workspaceId, onClose }: TutorPanelProps) {
     queryFn: async () => {
       const res = await fetch(`/api/workspaces/${workspaceId}/messages/tutor`);
       if (!res.ok) throw new Error("Failed to fetch messages");
+      return res.json();
+    },
+  });
+
+  // Fetch coder messages to show context awareness
+  const { data: coderMessages = [] } = useQuery<Message[]>({
+    queryKey: ["/api/workspaces", workspaceId, "messages", "coder"],
+    queryFn: async () => {
+      const res = await fetch(`/api/workspaces/${workspaceId}/messages/coder`);
+      if (!res.ok) throw new Error("Failed to fetch coder messages");
+      return res.json();
+    },
+  });
+
+  // Fetch diagrams to show context awareness
+  const { data: diagrams = [] } = useQuery<Diagram[]>({
+    queryKey: [`/api/workspaces/${workspaceId}/diagrams`],
+    queryFn: async () => {
+      const res = await fetch(`/api/workspaces/${workspaceId}/diagrams`);
+      if (!res.ok) throw new Error("Failed to fetch diagrams");
       return res.json();
     },
   });
@@ -202,6 +223,18 @@ export function TutorPanel({ workspaceId, onClose }: TutorPanelProps) {
         <div className="flex items-center gap-2">
           <GraduationCap className="h-4 w-4 text-primary" />
           <span className="font-semibold text-sm">Tutor</span>
+          {coderMessages.length > 0 && (
+            <Badge variant="secondary" className="h-5 gap-1 text-xs">
+              <Code2 className="h-2.5 w-2.5" />
+              {coderMessages.slice(-5).length}
+            </Badge>
+          )}
+          {diagrams.length > 0 && (
+            <Badge variant="secondary" className="h-5 gap-1 text-xs">
+              <Sparkles className="h-2.5 w-2.5" />
+              {diagrams.slice(-3).length}
+            </Badge>
+          )}
           {voiceMode && (
             <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded">Voice Mode</span>
           )}
