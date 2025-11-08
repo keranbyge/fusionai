@@ -34,7 +34,7 @@ import { Sparkles } from "lucide-react";
 
 export default function WorkspacePage() {
   const [, setLocation] = useLocation();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [activeWorkspace, setActiveWorkspace] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
@@ -292,7 +292,7 @@ export default function WorkspacePage() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className={`w-full ${sidebarCollapsed ? 'justify-center' : 'justify-start'} gap-2`}>
                 <User className="h-4 w-4" />
-                {!sidebarCollapsed && <span>{localStorage.getItem("userName") || "Demo User"}</span>}
+                {!sidebarCollapsed && <span>{user?.name || "User"}</span>}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">

@@ -12,6 +12,12 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (November 8, 2025)
 
+**User Name Display Fix**
+- Fixed bug where all users showed "Afaaz" as their name in workspace
+- Workspace now correctly fetches and displays user's actual name from database via useAuth hook
+- Removed reliance on localStorage for user name display (which was never being set)
+- Each user now sees their own correct name in the sidebar
+
 **Remember Me Feature**
 - Added "Remember Me" checkbox to login form
 - When checked, saves username to localStorage for auto-fill on next visit
