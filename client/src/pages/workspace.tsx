@@ -192,7 +192,7 @@ export default function WorkspacePage() {
           {!sidebarCollapsed && (
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-sidebar-primary" />
-              <span className="font-bold">Fusion.AI</span>
+              <span className="font-bold font-sixtyfour">Fusion.AI</span>
             </div>
           )}
           <div className="flex items-center gap-1">
