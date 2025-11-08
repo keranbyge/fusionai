@@ -12,6 +12,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (November 8, 2025)
 
+**Message Deletion Feature**
+- Added ability to delete messages from Coder and Tutor panels
+- Delete button appears on hover over user messages (small red trash icon in top-right corner)
+- Deletes both the user message and its corresponding AI reply in a single action
+- Backend: New DELETE /api/messages/:messageId endpoint with workspace ownership verification
+- Frontend: Integrated delete mutations with toast notifications for success/error feedback
+- Proper cache invalidation ensures UI updates immediately after deletion
+
 **Mermaid Diagram Rendering Fix**
 - Implemented comprehensive syntax-aware extraction to handle AI-generated Mermaid code with markdown fences and commentary
 - Added `fixMermaidSyntax()` helper with pattern matching for ALL major Mermaid diagram types:

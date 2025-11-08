@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { GraduationCap, X, Send, Mic, MicOff, Volume2, VolumeX, Square, BookOpen, Bell, Clock, Calendar, Code2, Sparkles } from "lucide-react";
+import { GraduationCap, X, Send, Mic, MicOff, Volume2, VolumeX, Square, BookOpen, Bell, Clock, Calendar, Code2, Sparkles, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -10,6 +10,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { voiceManager } from "@/lib/voiceManager";
 import ReactMarkdown from "react-markdown";
 import type { Message, Diagram } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 
 interface TutorPanelProps {
   workspaceId: string;
@@ -25,6 +26,7 @@ export function TutorPanel({ workspaceId, onClose }: TutorPanelProps) {
   const [quizzes, setQuizzes] = useState<Array<{ title: string; topics: string[] }>>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
+  const { toast } = useToast();
 
   const { data: messages = [] } = useQuery<Message[]>({
     queryKey: ["/api/workspaces", workspaceId, "messages", "tutor"],
@@ -67,6 +69,30 @@ export function TutorPanel({ workspaceId, onClose }: TutorPanelProps) {
       if (data.assistantMessage?.content) {
         speakText(data.assistantMessage.content);
       }
+    },
+  });
+
+  const deleteMessageMutation = useMutation({
+    mutationFn: async (messageId: string) => {
+      const res = await apiRequest("DELETE", `/api/messages/${messageId}`, {
+        workspaceId,
+        panelType: "tutor",
+      });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces", workspaceId, "messages", "tutor"] });
+      toast({
+        title: "Message deleted",
+        description: "The message and its reply have been removed.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Delete failed",
+        description: error.message || "Could not delete the message. Try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -374,15 +400,27 @@ export function TutorPanel({ workspaceId, onClose }: TutorPanelProps) {
           {messages.length > 0 && messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} group`}
             >
               <Card
-                className={`px-4 py-3 max-w-[80%] border-white/20 ${
+                className={`px-4 py-3 max-w-[80%] border-white/20 relative ${
                   message.role === "user"
                     ? "bg-green-500/20 backdrop-blur-md text-white border-green-400/30"
                     : "bg-white/10 backdrop-blur-md border-white/20"
                 }`}
               >
+                {message.role === "user" && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500/90 hover:bg-red-600 text-white"
+                    onClick={() => deleteMessageMutation.mutate(message.id)}
+                    disabled={deleteMessageMutation.isPending}
+                    data-testid={`button-delete-message-${message.id}`}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
                 <div className="text-sm prose prose-sm dark:prose-invert max-w-none">
                   <ReactMarkdown>{message.content}</ReactMarkdown>
                 </div>
