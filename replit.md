@@ -12,17 +12,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (November 8, 2025)
 
-**DarkVeil Background Component Replacement**
-- Replaced ColorBends with DarkVeil WebGL background for enhanced visual effects (user request)
-- Installed ogl library for lightweight WebGL rendering (replaced three.js)
-- DarkVeil uses CPPN (Compositional Pattern Producing Network) shader-based rendering
-- Removed ALL black overlay panels behind text for full background visibility
-- Text readability achieved through heavy text-shadows instead of background panels
-- Features: hue shifting, noise effects, scanlines, warp distortion, fully configurable
-- Configuration: hueShift=270 (purple tones), noiseIntensity=0.005, scanlineIntensity=0 (removed), speed=0.5, warpAmount=0.2
+**Plasma Background Component**
+- Restored Plasma WebGL background on landing page (user request)
+- Uses ogl library for lightweight WebGL rendering
+- Features smooth flowing plasma effects with purple tones
+- Removed ALL black overlay panels and text shadows for full background visibility
+- Clean text presentation without shadows on Plasma background
 - Buttons styled with semi-transparent purple backgrounds (bg-purple-500/20) and glassmorphism
-- Uninstalled three.js package and removed ColorBends component after replacement
-- Landing page now forces dark theme on mount via useEffect hook for consistent appearance
+- Landing page forces dark theme on mount via useEffect hook for consistent appearance
+- Plasma component includes mouse interaction and customizable colors
 
 **Reminder Creation Bug Fix**
 - Fixed "Failed to create reminder" error by updating insertReminderSchema to accept ISO datetime strings

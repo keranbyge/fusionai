@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "@/hooks/use-theme";
-import DarkVeil from "@/components/DarkVeil";
+import Plasma from "@/components/Plasma";
 
 export default function Landing() {
   const { setTheme } = useTheme();
@@ -34,25 +34,17 @@ export default function Landing() {
 
       <section className="relative h-[90vh] flex items-center justify-center overflow-hidden mt-0">
         <div className="absolute inset-0 z-0">
-          <DarkVeil
-            hueShift={270}
-            noiseIntensity={0.005}
-            scanlineIntensity={0}
-            speed={0.5}
-            scanlineFrequency={0}
-            warpAmount={0.2}
-            resolutionScale={1}
-          />
+          <Plasma />
         </div>
         <div className="relative z-20 text-center px-6 max-w-5xl mx-auto">
-          <h1 className="text-4xl md:text-6xl font-bold text-white" style={{ textShadow: '0 4px 12px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.9)' }}>
+          <h1 className="text-4xl md:text-6xl font-bold text-white">
             <span className="font-sixtyfour text-5xl">Fusion.AI</span><br/>
             <br />
             <span className="font-nabla">Replit x Vibeathon</span>
             <br />
             <span className="font-nabla">Polaris School of Technology</span>
           </h1>
-          <p className="text-xl md:text-2xl mt-8 text-white/90 max-w-3xl mx-auto" style={{ textShadow: '0 3px 8px rgba(0,0,0,0.8), 0 1px 3px rgba(0,0,0,0.9)' }}>
+          <p className="text-xl md:text-2xl mt-8 text-white/90 max-w-3xl mx-auto">
             A Human + AI Co-Creation Platform where you collaborate with AI for
             coding, creative art, and adaptive tutoring
           </p>
