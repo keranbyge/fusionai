@@ -1,11 +1,18 @@
 import { Link } from "wouter";
-import { Code2, Sparkles, GraduationCap, Play } from "lucide-react";
+import { Code2, Sparkles, GraduationCap, Play, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import Plasma from "@/components/Plasma";
 
 export default function Landing() {
+  const scrollToOverview = () => {
+    document.getElementById('project-overview')?.scrollIntoView({ 
+      behavior: 'smooth',
+      block: 'start'
+    });
+  };
+
   return (
     <div className="min-h-screen bg-transparent">
       <header className="fixed top-0 left-0 right-0 z-50 border-b bg-transparent backdrop-blur-2xl border border-white/20">
@@ -49,6 +56,119 @@ export default function Landing() {
                 data-testid="button-get-started"
               >
                 Get Started
+              </Button>
+            </Link>
+            <Button
+              size="lg"
+              onClick={scrollToOverview}
+              className="px-8 py-5 mt-5 text-lg rounded-full bg-transparent backdrop-blur-3xl border border-purple-300 hover:white/100 text-purple-300"
+              data-testid="button-project-overview"
+            >
+              <FileText className="h-5 w-5 mr-2" />
+              Project Overview
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <section id="project-overview" className="relative min-h-screen bg-background py-20 px-6">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">Project Overview</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Fusion.AI is a collaborative workspace platform that combines human creativity with AI capabilities across three specialized domains
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <Card className="hover-elevate">
+              <CardHeader>
+                <Code2 className="h-12 w-12 text-primary mb-4" />
+                <CardTitle>Coder Panel</CardTitle>
+                <CardDescription>AI-Powered Coding Assistant</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Get intelligent code suggestions, explanations, and debugging help. The Coder panel understands your entire project context and provides relevant coding assistance.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover-elevate">
+              <CardHeader>
+                <Sparkles className="h-12 w-12 text-primary mb-4" />
+                <CardTitle>Artist Canvas</CardTitle>
+                <CardDescription>Visual Diagram Generation</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Transform ideas into visual diagrams using Mermaid.js. Create flowcharts, sequence diagrams, and more through natural language prompts.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover-elevate">
+              <CardHeader>
+                <GraduationCap className="h-12 w-12 text-primary mb-4" />
+                <CardTitle>Tutor Panel</CardTitle>
+                <CardDescription>Adaptive Learning Assistance</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Personalized learning support that adapts to your pace. Get context-aware explanations and educational guidance across all domains.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="mb-12">
+            <CardHeader>
+              <CardTitle className="text-2xl">Key Features</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <Play className="h-5 w-5 text-primary" />
+                  Cross-Panel Synchronization
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  All three panels work together seamlessly. The Tutor is aware of your Coder conversations and Artist diagrams, providing truly contextual assistance.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  In-App Reminders
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Set reminders for important tasks and deadlines. The Tutor AI proactively alerts you about upcoming reminders during conversations.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <Code2 className="h-5 w-5 text-primary" />
+                  Persistent Workspaces
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Organize your work in dedicated workspaces. All conversations, diagrams, and context are preserved per workspace.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5 text-primary" />
+                  Secure Authentication
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Your data is protected with secure user authentication and isolated workspaces. Each user has their own private environment.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="text-center">
+            <Link href="/auth">
+              <Button size="lg" className="px-8 py-6 text-lg" data-testid="button-start-building">
+                Start Building with AI
               </Button>
             </Link>
           </div>
