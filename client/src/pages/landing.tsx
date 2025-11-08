@@ -53,7 +53,7 @@ export default function Landing() {
               <Button
                 size="lg"
                 variant="outline"
-                className="px-8 py-6 text-lg rounded-full bg-purple-500/20 backdrop-blur-md border-2 border-purple-300 text-white hover:bg-purple-500/30"
+                className="rounded-full backdrop-blur-md border-2 border-purple-300 hover:bg-purple-500/30 font-extrabold pl-[25px] pr-[25px] pt-[15px] pb-[15px] bg-[#fffffffc] text-[#080000] text-[15px]"
                 data-testid="button-get-started"
               >
                 Get Started
