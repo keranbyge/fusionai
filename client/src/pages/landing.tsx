@@ -48,7 +48,7 @@ export default function Landing() {
               pauseBetweenAnimations={2}
             />
             <br />
-            <span className="font-nabla">Replit x Vibeathon</span>
+            <span className="font-nabla text-[52px]">Replit x Vibeathon</span>
             <br />
             <span className="font-nabla text-[50px]">Polaris School of Technology</span>
           </h1>
