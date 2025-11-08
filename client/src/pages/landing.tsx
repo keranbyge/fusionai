@@ -31,7 +31,6 @@ export default function Landing() {
           </div>
         </div>
       </header>
-
       <section className="relative h-[90vh] flex items-center justify-center overflow-hidden mt-0">
         <div className="absolute inset-0 z-0">
           <Plasma />
@@ -72,7 +71,6 @@ export default function Landing() {
           </div>
         </div>
       </section>
-
       <section id="project-overview" className="relative min-h-screen bg-background dark:bg-gray-950 py-20 px-6">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
@@ -169,9 +167,7 @@ export default function Landing() {
 
           <div className="text-center">
             <Link href="/auth">
-              <Button size="lg" className="px-8 py-6 text-lg" data-testid="button-start-building">
-                Start Building with AI
-              </Button>
+              <Button size="lg" className="bg-[#ffffff24] text-[15px] pl-[25px] pr-[25px] pt-[10px] pb-[10px] ml-[0px] mr-[0px] mt-[0px] mb-[0px] font-extrabold" data-testid="button-start-building">Built by TEAM AURACODE</Button>
             </Link>
           </div>
         </div>
