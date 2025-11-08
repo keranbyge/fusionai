@@ -35,12 +35,12 @@ export default function Landing() {
       <section className="relative h-[90vh] flex items-center justify-center overflow-hidden mt-0">
         <div className="absolute inset-0 z-0">
           <DarkVeil
-            hueShift={0}
-            noiseIntensity={0.02}
-            scanlineIntensity={0.1}
+            hueShift={270}
+            noiseIntensity={0.005}
+            scanlineIntensity={0}
             speed={0.5}
-            scanlineFrequency={0.5}
-            warpAmount={0.3}
+            scanlineFrequency={0}
+            warpAmount={0.2}
             resolutionScale={1}
           />
         </div>

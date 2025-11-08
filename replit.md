@@ -19,7 +19,7 @@ Preferred communication style: Simple, everyday language.
 - Removed ALL black overlay panels behind text for full background visibility
 - Text readability achieved through heavy text-shadows instead of background panels
 - Features: hue shifting, noise effects, scanlines, warp distortion, fully configurable
-- Configuration: hueShift=0, noiseIntensity=0.02, scanlineIntensity=0.1, speed=0.5, warpAmount=0.3
+- Configuration: hueShift=270 (purple tones), noiseIntensity=0.005, scanlineIntensity=0 (removed), speed=0.5, warpAmount=0.2
 - Buttons styled with semi-transparent purple backgrounds (bg-purple-500/20) and glassmorphism
 - Uninstalled three.js package and removed ColorBends component after replacement
 - Landing page now forces dark theme on mount via useEffect hook for consistent appearance
