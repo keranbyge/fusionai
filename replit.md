@@ -10,6 +10,27 @@ The application is a full-stack web platform built with modern JavaScript techno
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (November 8, 2025)
+
+**Mermaid Diagram Rendering Fix**
+- Implemented comprehensive syntax-aware extraction to handle AI-generated Mermaid code with markdown fences and commentary
+- Added `fixMermaidSyntax()` helper with pattern matching for ALL major Mermaid diagram types:
+  - flowchart, sequence, class, state (full support)
+  - gitGraph (commit, branch, merge, checkout, tag, etc.)
+  - gantt (dateFormat, tasks, resources, markers)
+  - journey (steps with scores)
+  - timeline (year/event rows, sections)
+  - Plus: er, pie, mindmap, quadrantChart, requirementDiagram, zenuml, sankey
+- Automatically removes markdown code fences (```mermaid ... ```) from AI output
+- Stops extraction at first non-Mermaid line to prevent rendering errors
+- Fixes unquoted node labels containing spaces
+
+**Tutor Panel Context Awareness**
+- Added visual badges in Tutor panel header showing cross-panel context:
+  - Code2 icon badge displays count of recent Coder messages (last 5)
+  - Sparkles icon badge displays count of recent Artist diagrams (last 3)
+- Helps users understand when Tutor has contextual information from other panels
+
 ## System Architecture
 
 ### Frontend Architecture

@@ -16,8 +16,8 @@ const openai = new OpenAI({
 const SALT_ROUNDS = 12;
 
 // Helper function to extract and fix Mermaid code from AI output
-// Handles: flowchart, sequence, class, state diagrams (most common types)
-// Note: gitGraph, gantt, journey, timeline have partial support - may need expansion
+// Comprehensive support for all major Mermaid diagram types:
+// flowchart, sequence, class, state, gitGraph, gantt, journey, timeline, er, pie, etc.
 function fixMermaidSyntax(mermaidCode: string): string {
   let extracted = mermaidCode.trim();
   
@@ -109,17 +109,42 @@ function isMermaidSyntax(line: string): boolean {
   }
   
   // Directives and keywords
-  if (/^\s*(subgraph|end|style|classDef|class|click|linkStyle|direction|title|section|accTitle|accDescr|%%)/i.test(line)) {
+  if (/^\s*(subgraph|end|style|classDef|class|click|linkStyle|direction|title|section|accTitle|accDescr|accNote|accDescription|theme|defaultConfig|%%)/i.test(line)) {
+    return true;
+  }
+  
+  // Global init/config/theme directives
+  if (/%%\{(init|config|theme):/i.test(line)) {
     return true;
   }
   
   // Sequence diagram keywords
-  if (/^(participant|actor|activate|deactivate|note|loop|alt|opt|par|and|rect|critical|break|autonumber)/i.test(line)) {
+  if (/^(participant|actor|activate|deactivate|note|loop|alt|opt|par|and|rect|critical|break|autonumber|else)/i.test(line)) {
     return true;
   }
   
   // State diagram keywords and special syntax
   if (/^(state|hide empty description|\[\*\])/i.test(line)) {
+    return true;
+  }
+  
+  // gitGraph keywords
+  if (/^\s*(commit|branch|checkout|merge|reset|cherry-pick|revert|tag|stash|option)/i.test(line)) {
+    return true;
+  }
+  
+  // gantt keywords and directives
+  if (/^\s*(dateFormat|axisFormat|todayMarker|tickInterval|weekday|excludes|includes|calendar|resource|person|markToday|markPrevious|markWeekend)/i.test(line)) {
+    return true;
+  }
+  
+  // journey diagram patterns (step markers with scores)
+  if (/^\s*\.?[^:]+:\s*\d+:/.test(line)) {
+    return true;
+  }
+  
+  // timeline patterns (year/event rows)
+  if (/^\s*\d{4}\s*:/.test(line) || /^\s*section\s+/i.test(line)) {
     return true;
   }
   
