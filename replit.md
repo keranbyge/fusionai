@@ -12,6 +12,11 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (November 8, 2025)
 
+**Reminders System Bug Fixes**
+- Fixed reminder creation error caused by empty workspaceId validation
+- Updated mutation to properly filter out empty workspaceId values before sending to backend
+- Improved form data handling to ensure clean payload submission
+
 **Reminders System with Tutor Integration**
 - Added complete reminders feature with dedicated page for creating and managing reminders
 - Database schema: New `reminders` table with title, description, datetime, Google Calendar event ID, workspace association, and completion status
@@ -23,7 +28,7 @@ Preferred communication style: Simple, everyday language.
 - Dynamic reminder display: Tutor panel shows up to 5 upcoming reminders with time-until information and past-due warnings
 
 **Font Update**
-- Changed "Fusion.AI" logo font from "Press Start 2P" to "Sixtyfour" for a retro-tech aesthetic
+- Changed "Fusion.AI" logo font to "Press Start 2P" pixel font style for retro gaming aesthetic
 
 **Previous Updates**
 
