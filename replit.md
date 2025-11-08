@@ -12,7 +12,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (November 8, 2025)
 
-**Landing Page Enhancements**
+**Reminder Creation Bug Fix**
+- Fixed "Failed to create reminder" error by updating insertReminderSchema to accept ISO datetime strings
+- Schema now properly transforms ISO string dates to Date objects for backend validation
+- Reminder creation now works seamlessly from the frontend
+
+**Landing Page UI Enhancements**
+- Landing page now permanently displays in dark theme for consistent visual experience
+- Added glassmorphism effect to navbar with backdrop-blur-3xl and semi-transparent background (bg-black/20)
+- Subtle white border (border-white/10) for refined liquid glass aesthetic
+- Project overview section uses dark:bg-gray-950 for dark theme consistency
+
+**Landing Page Content Additions**
 - Added lavender color scheme for sidebar in light theme (280 70% 97% background, 280 30% 88% border)
 - Added "Project Overview" button next to "Get Started" button with smooth scroll functionality
 - Created comprehensive Project Overview section featuring:
