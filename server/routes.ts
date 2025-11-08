@@ -403,6 +403,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete message and its reply
+  app.delete("/api/messages/:messageId", requireAuth, async (req, res) => {
+    try {
+      const { messageId } = req.params;
+      const { workspaceId, panelType } = req.body;
+      
+      // Verify workspace ownership
+      const workspace = await storage.getWorkspace(workspaceId);
+      if (!workspace) {
+        return res.status(404).json({ error: "Workspace not found" });
+      }
+      if (workspace.userId !== req.session.userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      // Get all messages for this workspace and panel
+      const allMessages = await storage.getMessagesByWorkspaceAndPanel(workspaceId, panelType);
+      
+      // Find the message to delete and the next message (AI reply)
+      const messageIndex = allMessages.findIndex(msg => msg.id === messageId);
+      if (messageIndex === -1) {
+        return res.status(404).json({ error: "Message not found" });
+      }
+      
+      // Delete the user message
+      await storage.deleteMessage(messageId);
+      
+      // If there's a next message and it's from assistant, delete it too
+      if (messageIndex < allMessages.length - 1) {
+        const nextMessage = allMessages[messageIndex + 1];
+        if (nextMessage.role === "assistant") {
+          await storage.deleteMessage(nextMessage.id);
+        }
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      res.status(500).json({ error: "Failed to delete message" });
+    }
+  });
+
   // Coder AI endpoint (protected)
   app.post("/api/ai/coder", requireAuth, async (req, res) => {
     try {
