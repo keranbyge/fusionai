@@ -212,9 +212,10 @@ export default function WorkspacePage() {
           <div className="p-4">
             <Button
               onClick={handleNewWorkspace}
-              className="w-full justify-start gap-2"
+              className="w-full justify-start gap-2 bg-[#a361ff] text-center font-extrabold"
               data-testid="button-new-workspace"
               disabled={createWorkspaceMutation.isPending}
+              variant="ghost"
             >
               <Plus className="h-4 w-4" />
               New Workspace
