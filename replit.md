@@ -12,6 +12,11 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (November 8, 2025)
 
+**Sidebar UI Improvements**
+- Moved collapse/expand button into sidebar header next to Fusion.AI logo for better accessibility
+- Reduced Fusion.AI text size in sidebar to accommodate the collapse button
+- Relocated ThemeToggle from sidebar to main header for consistent access
+
 **Reminders System Bug Fixes**
 - Fixed reminder creation error caused by empty workspaceId validation
 - Updated mutation to properly filter out empty workspaceId values before sending to backend
