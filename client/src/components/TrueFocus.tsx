@@ -85,7 +85,7 @@ const TrueFocus: React.FC<TrueFocusProps> = ({
             ref={el => {
               wordRefs.current[index] = el;
             }}
-            className="relative text-[3rem] font-black cursor-pointer"
+            className="relative font-black cursor-pointer text-[52px]"
             style={
               {
                 filter: manualMode
@@ -105,7 +105,6 @@ const TrueFocus: React.FC<TrueFocusProps> = ({
           </span>
         );
       })}
-
       <motion.div
         className="absolute top-0 left-0 pointer-events-none box-border border-0"
         animate={{
