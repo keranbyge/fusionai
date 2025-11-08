@@ -12,6 +12,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (November 8, 2025)
 
+**Remember Me Feature**
+- Added "Remember Me" checkbox to login form
+- When checked, saves username to localStorage for auto-fill on next visit
+- Password is never stored in browser for security reasons
+- User still needs to enter password on return visits
+- Unchecking the box clears saved data from localStorage
+- Implements secure session management without compromising credentials
+
 **Plasma Background Component**
 - Restored Plasma WebGL background on landing page (user request)
 - Uses ogl library for lightweight WebGL rendering

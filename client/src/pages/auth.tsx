@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -16,7 +18,19 @@ export default function AuthPage() {
   const [signInPassword, setSignInPassword] = useState("");
   const [signUpUsername, setSignUpUsername] = useState("");
   const [signUpPassword, setSignUpPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const { toast } = useToast();
+
+  // Load saved credentials on mount
+  useEffect(() => {
+    const savedUsername = localStorage.getItem("rememberMe_username");
+    const shouldRemember = localStorage.getItem("rememberMe") === "true";
+    
+    if (shouldRemember && savedUsername) {
+      setSignInUsername(savedUsername);
+      setRememberMe(true);
+    }
+  }, []);
 
   const loginMutation = useMutation({
     mutationFn: async (data: { username: string; password: string }) => {
@@ -24,6 +38,15 @@ export default function AuthPage() {
       return await res.json();
     },
     onSuccess: (user) => {
+      // Handle remember me functionality
+      if (rememberMe) {
+        localStorage.setItem("rememberMe_username", signInUsername);
+        localStorage.setItem("rememberMe", "true");
+      } else {
+        localStorage.removeItem("rememberMe_username");
+        localStorage.removeItem("rememberMe");
+      }
+      
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       if (user.name) {
         setLocation("/workspace");
@@ -117,6 +140,26 @@ export default function AuthPage() {
                     required
                     data-testid="input-signin-password"
                   />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="remember-me"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => {
+                      setRememberMe(checked as boolean);
+                      if (!checked) {
+                        localStorage.removeItem("rememberMe_username");
+                        localStorage.removeItem("rememberMe");
+                      }
+                    }}
+                    data-testid="checkbox-remember-me"
+                  />
+                  <Label
+                    htmlFor="remember-me"
+                    className="text-sm text-white/80 cursor-pointer"
+                  >
+                    Remember me
+                  </Label>
                 </div>
                 <Button
                   type="submit"
