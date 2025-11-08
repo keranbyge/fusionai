@@ -163,6 +163,10 @@ export default function AuthPage() {
               </form>
             </TabsContent>
           </Tabs>
+          <div className="text-xs text-white/60 text-center mt-4">
+            Username: auracode<br />
+            Password: Polaris
+          </div>
         </CardContent>
       </Card>
     </div>
