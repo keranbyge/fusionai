@@ -369,7 +369,7 @@ export default function WorkspacePage() {
           <ResizablePanelGroup direction="horizontal" className="flex-1">
             {panelStates.coder && (
               <>
-                <ResizablePanel defaultSize={33} minSize={20}>
+                <ResizablePanel defaultSize={34} minSize={20}>
                   <CoderPanel workspaceId={activeWorkspace} onClose={() => togglePanel("coder")} />
                 </ResizablePanel>
                 {(panelStates.artist || panelStates.tutor) && <ResizableHandle />}
