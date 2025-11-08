@@ -3,7 +3,7 @@ import { Code2, Sparkles, GraduationCap, Play, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import Plasma from "@/components/Plasma";
+import ColorBends from "@/components/ColorBends";
 
 export default function Landing() {
   const scrollToOverview = () => {
@@ -26,13 +26,17 @@ export default function Landing() {
 
       <section className="relative h-[90vh] flex items-center justify-center overflow-hidden mt-0">
         <div className="absolute inset-0 z-0">
-          <Plasma 
-            color="#b794f6"
-            speed={0.8}
-            direction="forward"
-            scale={1.4}
-            opacity={1.2}
-            mouseInteractive={true}
+          <ColorBends
+            colors={["#ff5c7a", "#8a5cff", "#00ffd1"]}
+            rotation={30}
+            speed={0.3}
+            scale={1.2}
+            frequency={1.4}
+            warpStrength={1.2}
+            mouseInfluence={0.8}
+            parallax={0.6}
+            noise={0.08}
+            transparent
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-background/70 z-10" />
         </div>
