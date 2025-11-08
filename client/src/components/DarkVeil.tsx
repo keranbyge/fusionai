@@ -94,32 +94,52 @@ export default function DarkVeil({
 }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
-    const canvas = ref.current as HTMLCanvasElement;
-    const parent = canvas.parentElement as HTMLElement;
+    const canvas = ref.current;
+    if (!canvas) return;
+    
+    const parent = canvas.parentElement;
+    if (!parent) return;
 
-    const renderer = new Renderer({
-      dpr: Math.min(window.devicePixelRatio, 2),
-      canvas
-    });
+    let renderer, gl, geometry, program, mesh;
+    
+    try {
+      renderer = new Renderer({
+        dpr: Math.min(window.devicePixelRatio, 2),
+        canvas
+      });
 
-    const gl = renderer.gl;
-    const geometry = new Triangle(gl);
-
-    const program = new Program(gl, {
-      vertex,
-      fragment,
-      uniforms: {
-        uTime: { value: 0 },
-        uResolution: { value: new Vec2() },
-        uHueShift: { value: hueShift },
-        uNoise: { value: noiseIntensity },
-        uScan: { value: scanlineIntensity },
-        uScanFreq: { value: scanlineFrequency },
-        uWarp: { value: warpAmount }
+      gl = renderer.gl;
+      if (!gl) {
+        console.warn('WebGL not available');
+        return;
       }
-    });
+      
+      geometry = new Triangle(gl);
+    } catch (error) {
+      console.warn('Failed to initialize WebGL:', error);
+      return;
+    }
 
-    const mesh = new Mesh(gl, { geometry, program });
+    try {
+      program = new Program(gl, {
+        vertex,
+        fragment,
+        uniforms: {
+          uTime: { value: 0 },
+          uResolution: { value: new Vec2() },
+          uHueShift: { value: hueShift },
+          uNoise: { value: noiseIntensity },
+          uScan: { value: scanlineIntensity },
+          uScanFreq: { value: scanlineFrequency },
+          uWarp: { value: warpAmount }
+        }
+      });
+
+      mesh = new Mesh(gl, { geometry, program });
+    } catch (error) {
+      console.warn('Failed to create program/mesh:', error);
+      return;
+    }
 
     const resize = () => {
       const w = parent.clientWidth,

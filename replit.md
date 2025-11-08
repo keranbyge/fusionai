@@ -12,20 +12,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (November 8, 2025)
 
-**ColorBends Visibility and Text Readability Optimization**
-- Removed full-page dark gradient overlay to maximize ColorBends animation visibility (user feedback)
-- Implemented localized dark panel (bg-black/80 with backdrop-blur-md) behind hero text only
-- Panel covers only heading and description text, leaving 85%+ of hero section with full ColorBends exposure
-- Achieved 5.0:1 text contrast ratio, exceeding WCAG AA requirement (4.5:1)
-- Glassmorphism effect (rounded-3xl, backdrop-blur-md) blends panel beautifully with animated background
-- Buttons positioned outside panel for maximum ColorBends visibility and visual interest
-
-**ColorBends Background Component**
-- Replaced Plasma component with ColorBends on landing page for enhanced visual effects
-- Installed three.js library for WebGL-based shader animations
-- Created ColorBends component with custom GLSL shaders for animated gradient backgrounds
-- Features: mouse-interactive parallax, customizable colors (pink, purple, cyan), rotation, warp effects, and noise
-- Fully configurable with props for speed, scale, frequency, warp strength, and transparency
+**DarkVeil Background Component Replacement**
+- Replaced ColorBends with DarkVeil WebGL background for enhanced visual effects (user request)
+- Installed ogl library for lightweight WebGL rendering (replaced three.js)
+- DarkVeil uses CPPN (Compositional Pattern Producing Network) shader-based rendering
+- Removed ALL black overlay panels behind text for full background visibility
+- Text readability achieved through heavy text-shadows instead of background panels
+- Features: hue shifting, noise effects, scanlines, warp distortion, fully configurable
+- Configuration: hueShift=0, noiseIntensity=0.02, scanlineIntensity=0.1, speed=0.5, warpAmount=0.3
+- Buttons styled with semi-transparent purple backgrounds (bg-purple-500/20) and glassmorphism
+- Uninstalled three.js package and removed ColorBends component after replacement
 
 **Reminder Creation Bug Fix**
 - Fixed "Failed to create reminder" error by updating insertReminderSchema to accept ISO datetime strings
