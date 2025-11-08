@@ -363,11 +363,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         messages: [
           {
             role: "system",
-            content: "You are an expert at analyzing coding conversations and creating diagram prompts. Based on the conversation, suggest the most appropriate diagram type (flowchart, sequence diagram, class diagram, state diagram, etc.) and create a detailed prompt for it. Keep your response under 200 words and be specific about what should be visualized.",
+            content: "You are an expert at analyzing coding discussions and creating technical diagram prompts. Focus on the CODE, ALGORITHM, or TECHNICAL CONCEPT being discussed - NOT the conversation itself. Create prompts for flowcharts showing logic flow, class diagrams showing structure, or state diagrams showing behavior. NEVER create sequence diagrams of user-AI conversations. Keep your response under 200 words.",
           },
           {
             role: "user",
-            content: `Analyze this coding conversation and create a diagram prompt that visualizes the key concept:\n\n${context}`,
+            content: `Analyze this coding discussion and create a diagram prompt that visualizes the algorithm, code logic, or technical concept being explained:\n\n${context}`,
           },
         ],
         temperature: 0.7,
@@ -381,11 +381,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         messages: [
           {
             role: "system",
-            content: "You are an expert at creating diagrams using Mermaid.js syntax. When given a description, generate valid Mermaid.js code for flowcharts, sequence diagrams, class diagrams, or other diagram types. Only respond with the Mermaid code, no explanations or markdown code blocks.",
+            content: "You are an expert at creating technical diagrams using Mermaid.js syntax. Create flowcharts for algorithms, class diagrams for code structure, or state diagrams for behavior. Focus on visualizing the CODE and LOGIC, not conversations. Only respond with the Mermaid code, no explanations or markdown code blocks.",
           },
           {
             role: "user",
-            content: `${diagramPrompt}\n\nContext from coding discussion:\n${latestAIResponse.content.substring(0, 800)}`,
+            content: `${diagramPrompt}\n\nCode/technical content:\n${latestAIResponse.content.substring(0, 800)}`,
           },
         ],
         temperature: 0.5,
