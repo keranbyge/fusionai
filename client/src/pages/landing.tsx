@@ -1,11 +1,19 @@
 import { Link } from "wouter";
+import { useEffect } from "react";
 import { Code2, Sparkles, GraduationCap, Play, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useTheme } from "@/hooks/use-theme";
 import DarkVeil from "@/components/DarkVeil";
 
 export default function Landing() {
+  const { setTheme } = useTheme();
+  
+  useEffect(() => {
+    setTheme("dark");
+  }, [setTheme]);
+
   const scrollToOverview = () => {
     document.getElementById('project-overview')?.scrollIntoView({ 
       behavior: 'smooth',
