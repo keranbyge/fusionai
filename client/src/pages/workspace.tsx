@@ -193,7 +193,7 @@ export default function WorkspacePage() {
             <>
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-sidebar-primary" />
-                <span className="font-bold font-sixtyfour text-sm">Fusion.AI</span>
+                <span className="font-bold font-sixtyfour text-sm">Fusion AI</span>
               </div>
               <Button
                 variant="ghost"

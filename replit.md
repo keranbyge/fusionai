@@ -2,253 +2,68 @@
 
 ## Overview
 
-CoCreate AI is a Human + AI Co-Creation Platform that enables collaborative work between users and AI across three specialized domains: coding assistance (Coder), creative visualization (Artist), and adaptive learning (Tutor). The platform provides a workspace-based environment where users can interact with AI through chat interfaces and generate diagrams, with all interactions and context preserved per workspace.
-
-The application is a full-stack web platform built with modern JavaScript technologies, featuring a React-based frontend, Express backend, PostgreSQL database via Neon, and OpenAI integration for AI capabilities.
+CoCreate AI is a Human + AI Co-Creation Platform designed for collaborative work between users and AI in coding (Coder), creative visualization (Artist), and adaptive learning (Tutor). The platform provides a workspace-based environment with chat interfaces and diagram generation, preserving all interactions and context per workspace. It's a full-stack web application built with React, Express, PostgreSQL (Neon), and OpenAI integration.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
 
-## Recent Changes (November 8, 2025)
-
-**User Name Display Fix**
-- Fixed bug where all users showed "Afaaz" as their name in workspace
-- Workspace now correctly fetches and displays user's actual name from database via useAuth hook
-- Removed reliance on localStorage for user name display (which was never being set)
-- Each user now sees their own correct name in the sidebar
-
-**Remember Me Feature**
-- Added "Remember Me" checkbox to login form
-- When checked, saves username to localStorage for auto-fill on next visit
-- Password is never stored in browser for security reasons
-- User still needs to enter password on return visits
-- Unchecking the box clears saved data from localStorage
-- Implements secure session management without compromising credentials
-
-**Plasma Background Component**
-- Restored Plasma WebGL background on landing page (user request)
-- Uses ogl library for lightweight WebGL rendering
-- Features smooth flowing plasma effects with purple tones
-- Removed ALL black overlay panels and text shadows for full background visibility
-- Clean text presentation without shadows on Plasma background
-- Buttons styled with semi-transparent purple backgrounds (bg-purple-500/20) and glassmorphism
-- Landing page forces dark theme on mount via useEffect hook for consistent appearance
-- Plasma component includes mouse interaction and customizable colors
-
-**Reminder Creation Bug Fix**
-- Fixed "Failed to create reminder" error by updating insertReminderSchema to accept ISO datetime strings
-- Schema now properly transforms ISO string dates to Date objects for backend validation
-- Reminder creation now works seamlessly from the frontend
-
-**Landing Page UI Enhancements**
-- Landing page now permanently displays in dark theme for consistent visual experience
-- Added glassmorphism effect to navbar with backdrop-blur-3xl and semi-transparent background (bg-black/20)
-- Subtle white border (border-white/10) for refined liquid glass aesthetic
-- Project overview section uses dark:bg-gray-950 for dark theme consistency
-
-**Landing Page Content Additions**
-- Added lavender color scheme for sidebar in light theme (280 70% 97% background, 280 30% 88% border)
-- Added "Project Overview" button next to "Get Started" button with smooth scroll functionality
-- Created comprehensive Project Overview section featuring:
-  - Three panel cards (Coder, Artist, Tutor) with descriptions
-  - Key Features grid highlighting Cross-Panel Synchronization, In-App Reminders, Persistent Workspaces, and Secure Authentication
-  - Call-to-action button for starting with the platform
-- All interactive elements include proper data-testid attributes for testing
-
-**Judging Criteria Section on Landing Page** (November 8, 2025)
-- Added dedicated "Judging Criteria" section after Project Overview with liquid glass card effects
-- Three glassmorphic cards (backdrop-blur-xl with semi-transparent colored backgrounds):
-  - **Innovation** (purple theme): Highlights cross-panel AI synchronization, auto-diagram generation, and proactive reminder integration
-  - **Human-AI Interaction** (blue theme): Showcases natural conversation flow, context-aware responses, and real-time visual feedback
-  - **Real-World Utility** (green theme): Emphasizes education/learning applications, professional development use cases, and secure data management
-- Each card features:
-  - Color-coded icons and headers (Lightbulb, Users, Target icons)
-  - Bulleted list with specific examples of how Fusion.AI addresses each criterion
-  - Hover elevation effects for interactivity
-- Design uses glassmorphism consistent with landing page button styling (backdrop-blur, semi-transparent backgrounds, colored borders)
-
-**Sidebar UI Improvements**
-- Moved collapse/expand button into sidebar header next to Fusion.AI logo for better accessibility
-- Reduced Fusion.AI text size in sidebar to accommodate the collapse button
-- Relocated ThemeToggle from sidebar to main header for consistent access
-
-**Reminders System Bug Fixes**
-- Fixed reminder creation error caused by empty workspaceId validation
-- Updated mutation to properly filter out empty workspaceId values before sending to backend
-- Improved form data handling to ensure clean payload submission
-
-**Reminders System with Tutor Integration**
-- Added complete in-app reminders feature with dedicated page for creating and managing reminders
-- Database schema: New `reminders` table with title, description, datetime, workspace association, and completion status
-- Backend API: Full CRUD operations (GET, POST, PATCH, DELETE) with user authentication
-- Reminders page UI: Form to create reminders, categorized lists (upcoming, past due, completed)
-- Navigation: "Reminders" button in workspace header for easy access
-- Tutor AI integration: Automatically fetches upcoming reminders and includes them in conversation context to proactively alert users
-- Visual indicators: Amber badge in Tutor panel header showing count of upcoming reminders
-- Dynamic reminder display: Tutor panel shows up to 5 upcoming reminders with time-until information and past-due warnings
-- In-app only: No external calendar integration required - all reminders are managed within Fusion.AI
-
-**Font Update**
-- Changed "Fusion.AI" logo font to "Press Start 2P" pixel font style for retro gaming aesthetic
-
-**Previous Updates**
-
-**Message Deletion Feature**
-- Added ability to delete messages from Coder and Tutor panels
-- Delete button appears on hover over user messages (small red trash icon in top-right corner)
-- Deletes both the user message and its corresponding AI reply in a single action
-- Backend: New DELETE /api/messages/:messageId endpoint with workspace ownership verification
-- Frontend: Integrated delete mutations with toast notifications for success/error feedback
-- Proper cache invalidation ensures UI updates immediately after deletion
-
-**Mermaid Diagram Rendering Fix**
-- Implemented comprehensive syntax-aware extraction to handle AI-generated Mermaid code with markdown fences and commentary
-- Added `fixMermaidSyntax()` helper with pattern matching for ALL major Mermaid diagram types:
-  - flowchart, sequence, class, state (full support)
-  - gitGraph (commit, branch, merge, checkout, tag, etc.)
-  - gantt (dateFormat, tasks, resources, markers)
-  - journey (steps with scores)
-  - timeline (year/event rows, sections)
-  - Plus: er, pie, mindmap, quadrantChart, requirementDiagram, zenuml, sankey
-- Automatically removes markdown code fences (```mermaid ... ```) from AI output
-- Stops extraction at first non-Mermaid line to prevent rendering errors
-- Fixes unquoted node labels containing spaces
-
-**Tutor Panel Context Awareness**
-- Added visual badges in Tutor panel header showing cross-panel context:
-  - Code2 icon badge displays count of recent Coder messages (last 5)
-  - Sparkles icon badge displays count of recent Artist diagrams (last 3)
-- Helps users understand when Tutor has contextual information from other panels
-
 ## System Architecture
 
 ### Frontend Architecture
 
-**Framework & Build System**
-- React 18 with TypeScript for type safety and component-based architecture
-- Vite as the build tool and development server for fast hot module replacement
-- Wouter for lightweight client-side routing (landing page, workspace, 404)
-
-**UI Component System**
-- Shadcn/ui component library built on Radix UI primitives for accessible, unstyled components
-- Tailwind CSS for utility-first styling with custom design tokens
-- Theme system supporting light/dark modes with CSS variables
-- Custom color system using HSL values for consistent theming across components
-
-**State Management**
-- TanStack Query (React Query) for server state management, caching, and data synchronization
-- Local React state for UI-specific concerns
-- Query client configured with infinite stale time and disabled auto-refetching for explicit control
-
-**Key Features**
-- Resizable panel layout for the three AI panels (Coder, Artist, Tutor) using react-resizable-panels
-- Real-time chat interfaces for each panel with message history
-- Mermaid.js integration for rendering diagrams generated by the Artist panel
-- Workspace management with persistent panel states stored in database
-- **Cross-Panel Synchronization System** (November 2025):
-  - Sync button in Coder panel auto-generates diagrams from coding conversations
-  - Artist AI includes context from Coder panel for contextually-aware diagram generation
-  - Tutor AI pulls context from both Coder messages (last 5) and Artist diagrams (last 3)
-  - All three panels share workspace context seamlessly for intelligent collaboration
+**Framework & Build System:** React 18 with TypeScript, Vite for build and development.
+**UI Component System:** Shadcn/ui (Radix UI primitives) with Tailwind CSS for utility-first styling, supporting light/dark modes and custom HSL-based color system.
+**State Management:** TanStack Query for server state management, local React state for UI.
+**Key Features:** Resizable panel layout (react-resizable-panels), real-time chat, Mermaid.js integration, persistent workspace states, and a Cross-Panel Synchronization System. The sync system enables the Coder panel to auto-generate diagrams, the Artist AI to use Coder context, and the Tutor AI to pull context from both Coder messages (last 5) and Artist diagrams (last 3) for seamless collaboration. In-app reminders are also integrated, with the Tutor AI proactively alerting users about upcoming reminders.
 
 ### Backend Architecture
 
-**Server Framework**
-- Express.js as the HTTP server
-- ESM (ES Modules) throughout the codebase for modern JavaScript syntax
-- Custom middleware for request logging and JSON body parsing with raw body preservation
-
-**API Design**
-- RESTful API structure with `/api/*` prefix
-- Routes organized by resource: workspaces, messages, diagrams, AI endpoints
-- Session-based authentication with PostgreSQL session store
-- Cross-panel sync endpoints: `/api/ai/sync-to-artist` for intelligent diagram generation from code discussions
-
-**Data Layer**
-- In-memory storage implementation (MemStorage class) for development
-- Interface-based storage design (IStorage) for easy swapping to database implementation
-- UUID generation for all entities
-
-**Development Setup**
-- Vite middleware integration for SSR during development
-- Development-only plugins: runtime error overlay, cartographer, dev banner
-- Production builds bundle both frontend and backend separately
+**Server Framework:** Express.js with ESM, custom middleware for logging and JSON parsing.
+**API Design:** RESTful API (`/api/*`) with routes organized by resource. Session-based authentication is intended with a PostgreSQL session store.
+**Data Layer:** Interface-based storage design (IStorage) for flexible data persistence, UUID generation for entities.
+**Development Setup:** Vite middleware integration for SSR during development.
 
 ### Data Storage Solutions
 
-**Database Configuration**
-- PostgreSQL via Neon serverless driver with WebSocket support
-- Drizzle ORM for type-safe database queries and schema management
-- Schema-first approach with Zod validation schemas generated from Drizzle tables
-
-**Schema Design**
-
-*Users Table*
-- Stores user credentials (username, hashed password)
-- UUID primary keys generated by PostgreSQL
-
-*Workspaces Table*
-- Belongs to a user, stores workspace name
-- JSONB field for panel states (which panels are open/closed)
-- Timestamps for creation and last update
-
-*Messages Table*
-- Belongs to a workspace and specific panel type (coder/artist/tutor)
-- Stores role (user/assistant) and content
-- Enables conversation history and context retention per panel
-
-*Diagrams Table*
-- Stores Artist panel generated diagrams
-- Includes original prompt and generated Mermaid code
-- Associated with workspace for context preservation
-
-**Migration Strategy**
-- Drizzle Kit for schema migrations
-- Migrations stored in `/migrations` directory
-- Push-based workflow for development (`db:push` script)
+**Database Configuration:** PostgreSQL via Neon serverless driver, Drizzle ORM for type-safe queries and schema management.
+**Schema Design:**
+- **Users Table:** Stores user credentials (username, hashed password).
+- **Workspaces Table:** Links to users, stores workspace name and JSONB for panel states, includes timestamps.
+- **Messages Table:** Associated with workspaces and panel types (coder/artist/tutor), stores role and content for conversation history.
+- **Diagrams Table:** Stores Artist-generated diagrams (prompt, Mermaid code), associated with workspaces.
+- **Reminders Table:** Stores title, description, datetime, workspace association, and completion status.
+**Migration Strategy:** Drizzle Kit for schema migrations.
 
 ### Authentication and Authorization
 
-**Current State**
-- Hardcoded "demo-user" ID throughout the application
-- Password field exists in users schema but no hashing/validation implemented
-- No session management or JWT tokens
+Currently uses a hardcoded "demo-user" ID. Planned architecture involves Flask-style session management using `connect-pg-simple` for a PostgreSQL session store.
 
-**Planned Architecture** (based on dependencies)
-- Flask-style session management using connect-pg-simple for PostgreSQL session store
-- Intended to use either Flask-JWT or Flask-Login patterns (though this is a Node.js app, suggesting Flask was the original plan that shifted)
+## External Dependencies
 
-### External Dependencies
+**AI Services:**
+- OpenRouter API (via OpenAI SDK) using `openai/gpt-4o-mini` for chat completions across all AI panels (Coder, Artist, Tutor).
+- AI-powered analysis of Coder conversations for diagram auto-generation.
 
-**AI Services**
-- OpenRouter API (via OpenAI SDK) for chat completions across all AI panels
-- Model: `openai/gpt-4o-mini` for cost-effective, fast responses
-- Coder panel: Programming assistance with conversation history
-- Artist panel: Mermaid diagram generation from prompts with optional Coder context integration
-- Tutor panel: Personalized learning with cross-panel awareness (reads Coder messages and Artist diagrams)
-- Sync system: AI-powered analysis of Coder conversations to auto-generate relevant diagrams
+**UI Component Libraries:**
+- Radix UI primitives for accessible components.
+- Lucide React for iconography.
+- `date-fns` for date formatting.
+- `cmdk` for command palette components.
+- Mermaid.js for diagram rendering.
+- `ogl` for WebGL rendering of the Plasma background on the landing page.
+- Framer Motion for animations.
 
-**UI Component Libraries**
-- Radix UI primitives: 20+ component primitives for accessibility and unstyled foundations
-- Lucide React for iconography (consistent icon set throughout)
-- date-fns for date formatting and manipulation
-- cmdk for command palette components
-- Mermaid.js for diagram rendering in the browser
+**Development Tools:**
+- TypeScript for type checking.
+- ESBuild for production bundling.
+- PostCSS with Autoprefixer.
 
-**Development Tools**
-- Replit-specific plugins for development environment integration
-- TypeScript for type checking across the entire codebase
-- ESBuild for production bundling of the server
-- PostCSS with Autoprefixer for CSS processing
+**Database Infrastructure:**
+- Neon serverless PostgreSQL.
+- Drizzle ORM.
 
-**Database Infrastructure**
-- Neon serverless PostgreSQL (configured via DATABASE_URL environment variable)
-- WebSocket support for serverless database connections
-- Drizzle ORM with PostgreSQL dialect
-
-**Design System**
-- Google Fonts: Inter (primary), JetBrains Mono (code), DM Sans, Fira Code, Geist Mono
-- Tailwind CSS with custom configuration extending Shadcn's New York theme
-- Custom CSS variables for theming with HSL color space
-- Design guidelines documented separately for consistent visual language
+**Design System:**
+- Google Fonts: Inter, JetBrains Mono, DM Sans, Fira Code, Geist Mono.
+- Tailwind CSS with custom configuration.
+- Custom CSS variables for theming.

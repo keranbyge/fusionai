@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "@/hooks/use-theme";
 import Plasma from "@/components/Plasma";
+import TrueFocus from "@/components/TrueFocus";
 
 export default function Landing() {
   const { setTheme } = useTheme();
@@ -27,7 +28,7 @@ export default function Landing() {
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-purple-300" />
-            <span className="text-m font-bold text-purple-300 font-sixtyfour">Fusion.AI</span>
+            <span className="text-m font-bold text-purple-300 font-sixtyfour">Fusion AI</span>
           </div>
         </div>
       </header>
@@ -36,8 +37,16 @@ export default function Landing() {
           <Plasma />
         </div>
         <div className="relative z-20 text-center px-6 max-w-5xl mx-auto">
-          <h1 className="text-4xl md:text-6xl font-bold text-white">
-            <span className="font-sixtyfour text-5xl">Fusion AI</span><br/>
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+            <TrueFocus 
+              sentence="Fusion AI"
+              manualMode={false}
+              blurAmount={5}
+              borderColor="#c084fc"
+              glowColor="rgba(192, 132, 252, 0.6)"
+              animationDuration={1.5}
+              pauseBetweenAnimations={2}
+            />
             <br />
             <span className="font-nabla">Replit x Vibeathon</span>
             <br />
@@ -73,7 +82,7 @@ export default function Landing() {
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">Project Overview</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Fusion.AI is a collaborative workspace platform that combines human creativity with AI capabilities across three specialized domains
+              Fusion AI is a collaborative workspace platform that combines human creativity with AI capabilities across three specialized domains
             </p>
           </div>
 
@@ -165,7 +174,7 @@ export default function Landing() {
           <div className="mb-16 mt-20">
             <div className="text-center mb-12">
               <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-                How Fusion.AI excels in Innovation, Human-AI Interaction, and Real-World Utility
+                How Fusion AI excels in Innovation, Human-AI Interaction, and Real-World Utility
               </p>
             </div>
 

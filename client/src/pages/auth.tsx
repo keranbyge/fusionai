@@ -107,7 +107,7 @@ export default function AuthPage() {
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Sparkles className="h-8 w-8 mr-2 text-white" />
-            <span className="text-2xl font-bold font-sixtyfour text-white">Fusion.AI</span>
+            <span className="text-2xl font-bold font-sixtyfour text-white">Fusion AI</span>
           </div>
           <CardTitle className="text-white">Welcome</CardTitle>
         </CardHeader>

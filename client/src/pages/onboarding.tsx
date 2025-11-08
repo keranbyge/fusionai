@@ -44,7 +44,7 @@ export default function OnboardingPage() {
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Sparkles className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">Fusion.AI</span>
+            <span className="text-2xl font-bold">Fusion AI</span>
           </div>
           <CardTitle>What's your name?</CardTitle>
           <CardDescription>Let's personalize your experience</CardDescription>
