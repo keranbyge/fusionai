@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ArrowLeft, Bell, CalendarPlus, Trash2, Check, Calendar } from "lucide-react";
+import { ArrowLeft, Bell, CalendarPlus, Trash2, Check } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -106,18 +105,6 @@ export default function RemindersPage() {
     },
   });
 
-  const syncToCalendarMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return apiRequest("POST", `/api/reminders/${id}/sync-to-calendar`);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Sync to Calendar",
-        description: "Google Calendar integration will be set up with OAuth in the next update.",
-      });
-    },
-  });
-
   const onSubmit = (data: ReminderFormData) => {
     createReminderMutation.mutate(data);
   };
@@ -141,7 +128,7 @@ export default function RemindersPage() {
               Reminders
             </h1>
             <p className="text-muted-foreground mt-1">
-              Manage your reminders and sync with Google Calendar
+              Manage your reminders and stay organized
             </p>
           </div>
         </div>
@@ -274,26 +261,15 @@ export default function RemindersPage() {
                               {new Date(reminder.reminderDate).toLocaleString()}
                             </p>
                           </div>
-                          <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => syncToCalendarMutation.mutate(reminder.id)}
-                              data-testid={`button-sync-${reminder.id}`}
-                            >
-                              <Calendar className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive"
-                              onClick={() => deleteReminderMutation.mutate(reminder.id)}
-                              data-testid={`button-delete-${reminder.id}`}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive"
+                            onClick={() => deleteReminderMutation.mutate(reminder.id)}
+                            data-testid={`button-delete-${reminder.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       ))}
                     </CardContent>
@@ -330,24 +306,14 @@ export default function RemindersPage() {
                               {new Date(reminder.reminderDate).toLocaleString()}
                             </p>
                           </div>
-                          <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => syncToCalendarMutation.mutate(reminder.id)}
-                            >
-                              <Calendar className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive"
-                              onClick={() => deleteReminderMutation.mutate(reminder.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive"
+                            onClick={() => deleteReminderMutation.mutate(reminder.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       ))}
                     </CardContent>

@@ -23,14 +23,15 @@ Preferred communication style: Simple, everyday language.
 - Improved form data handling to ensure clean payload submission
 
 **Reminders System with Tutor Integration**
-- Added complete reminders feature with dedicated page for creating and managing reminders
-- Database schema: New `reminders` table with title, description, datetime, Google Calendar event ID, workspace association, and completion status
+- Added complete in-app reminders feature with dedicated page for creating and managing reminders
+- Database schema: New `reminders` table with title, description, datetime, workspace association, and completion status
 - Backend API: Full CRUD operations (GET, POST, PATCH, DELETE) with user authentication
-- Reminders page UI: Form to create reminders, categorized lists (upcoming, past due, completed), sync to Google Calendar button (placeholder for OAuth)
+- Reminders page UI: Form to create reminders, categorized lists (upcoming, past due, completed)
 - Navigation: "Reminders" button in workspace header for easy access
 - Tutor AI integration: Automatically fetches upcoming reminders and includes them in conversation context to proactively alert users
 - Visual indicators: Amber badge in Tutor panel header showing count of upcoming reminders
 - Dynamic reminder display: Tutor panel shows up to 5 upcoming reminders with time-until information and past-due warnings
+- In-app only: No external calendar integration required - all reminders are managed within Fusion.AI
 
 **Font Update**
 - Changed "Fusion.AI" logo font to "Press Start 2P" pixel font style for retro gaming aesthetic
