@@ -49,7 +49,7 @@ export default function Landing() {
               <Button
                 size="lg"
                 variant="outline"
-                className="rounded-full backdrop-blur-md border-2 border-purple-300 hover:bg-purple-500/30 font-extrabold pl-[25px] pr-[25px] pt-[15px] pb-[15px] bg-[#fffffffc] text-[#080000] text-[15px]"
+                className="rounded-full backdrop-blur-md border-2 border-purple-300 hover:bg-purple-500/30 font-extrabold bg-[#fffffffc] text-[#080000] text-[15px] pl-[23px] pr-[23px] pt-[14px] pb-[14px]"
                 data-testid="button-get-started"
               >
                 Get Started
