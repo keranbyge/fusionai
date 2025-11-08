@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useEffect } from "react";
-import { Code2, Sparkles, GraduationCap, Play, FileText } from "lucide-react";
+import { Code2, Sparkles, GraduationCap, Play, FileText, Lightbulb, Users, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -161,6 +161,80 @@ export default function Landing() {
               </div>
             </CardContent>
           </Card>
+
+          <div className="mb-16 mt-20">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Judging Criteria</h2>
+              <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+                How Fusion.AI excels in Innovation, Human-AI Interaction, and Real-World Utility
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="backdrop-blur-xl bg-purple-500/10 border-2 border-purple-300/30 rounded-lg p-6 hover-elevate" data-testid="card-innovation">
+                <div className="flex items-center gap-3 mb-4">
+                  <Lightbulb className="h-10 w-10 text-purple-400" />
+                  <h3 className="text-2xl font-bold text-purple-300">Innovation</h3>
+                </div>
+                <ul className="space-y-3 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <Sparkles className="h-4 w-4 text-purple-400 mt-0.5 flex-shrink-0" />
+                    <span><strong>Cross-Panel AI Synchronization:</strong> Three AI agents that share context seamlessly - Tutor knows what you coded and what diagrams you created</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Sparkles className="h-4 w-4 text-purple-400 mt-0.5 flex-shrink-0" />
+                    <span><strong>Auto-Diagram Generation:</strong> One-click sync from Coder to Artist - AI analyzes your code conversations and generates relevant diagrams automatically</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Sparkles className="h-4 w-4 text-purple-400 mt-0.5 flex-shrink-0" />
+                    <span><strong>Proactive Reminder Integration:</strong> Tutor AI monitors your reminders and proactively alerts you during conversations - never miss a deadline</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="backdrop-blur-xl bg-blue-500/10 border-2 border-blue-300/30 rounded-lg p-6 hover-elevate" data-testid="card-human-ai">
+                <div className="flex items-center gap-3 mb-4">
+                  <Users className="h-10 w-10 text-blue-400" />
+                  <h3 className="text-2xl font-bold text-blue-300">Human-AI Interaction</h3>
+                </div>
+                <ul className="space-y-3 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <Play className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                    <span><strong>Natural Conversation Flow:</strong> Chat with AI in everyday language across coding, visual design, and learning - no complex commands required</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Play className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                    <span><strong>Context-Aware Responses:</strong> AI remembers your entire workspace history and provides personalized, relevant assistance based on past interactions</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Play className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                    <span><strong>Visual Feedback:</strong> Real-time diagram rendering with Mermaid.js shows your ideas taking shape instantly as you describe them</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="backdrop-blur-xl bg-green-500/10 border-2 border-green-300/30 rounded-lg p-6 hover-elevate" data-testid="card-real-world">
+                <div className="flex items-center gap-3 mb-4">
+                  <Target className="h-10 w-10 text-green-400" />
+                  <h3 className="text-2xl font-bold text-green-300">Real-World Utility</h3>
+                </div>
+                <ul className="space-y-3 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <Code2 className="h-4 w-4 text-green-400 mt-0.5 flex-shrink-0" />
+                    <span><strong>Education & Learning:</strong> Students can code, visualize concepts, and get personalized tutoring all in one platform - perfect for self-paced learning</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Code2 className="h-4 w-4 text-green-400 mt-0.5 flex-shrink-0" />
+                    <span><strong>Professional Development:</strong> Developers get coding help, auto-generate documentation diagrams, and track project deadlines with integrated reminders</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Code2 className="h-4 w-4 text-green-400 mt-0.5 flex-shrink-0" />
+                    <span><strong>Secure Data Management:</strong> PostgreSQL database with user authentication ensures your code, diagrams, and conversations remain private and persistent</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
 
           <div className="text-center">
             <Link href="/auth">

@@ -56,6 +56,18 @@ Preferred communication style: Simple, everyday language.
   - Call-to-action button for starting with the platform
 - All interactive elements include proper data-testid attributes for testing
 
+**Judging Criteria Section on Landing Page** (November 8, 2025)
+- Added dedicated "Judging Criteria" section after Project Overview with liquid glass card effects
+- Three glassmorphic cards (backdrop-blur-xl with semi-transparent colored backgrounds):
+  - **Innovation** (purple theme): Highlights cross-panel AI synchronization, auto-diagram generation, and proactive reminder integration
+  - **Human-AI Interaction** (blue theme): Showcases natural conversation flow, context-aware responses, and real-time visual feedback
+  - **Real-World Utility** (green theme): Emphasizes education/learning applications, professional development use cases, and secure data management
+- Each card features:
+  - Color-coded icons and headers (Lightbulb, Users, Target icons)
+  - Bulleted list with specific examples of how Fusion.AI addresses each criterion
+  - Hover elevation effects for interactivity
+- Design uses glassmorphism consistent with landing page button styling (backdrop-blur, semi-transparent backgrounds, colored borders)
+
 **Sidebar UI Improvements**
 - Moved collapse/expand button into sidebar header next to Fusion.AI logo for better accessibility
 - Reduced Fusion.AI text size in sidebar to accommodate the collapse button
