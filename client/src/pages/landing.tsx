@@ -3,7 +3,7 @@ import { Code2, Sparkles, GraduationCap, Play, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import ColorBends from "@/components/ColorBends";
+import DarkVeil from "@/components/DarkVeil";
 
 export default function Landing() {
   const scrollToOverview = () => {
@@ -26,38 +26,34 @@ export default function Landing() {
 
       <section className="relative h-[90vh] flex items-center justify-center overflow-hidden mt-0">
         <div className="absolute inset-0 z-0">
-          <ColorBends
-            colors={["#ff5c7a", "#8a5cff", "#00ffd1"]}
-            rotation={30}
-            speed={0.3}
-            scale={1.2}
-            frequency={1.4}
-            warpStrength={1.2}
-            mouseInfluence={0.8}
-            parallax={0.6}
-            noise={0.08}
-            transparent
+          <DarkVeil
+            hueShift={0}
+            noiseIntensity={0.02}
+            scanlineIntensity={0.1}
+            speed={0.5}
+            scanlineFrequency={0.5}
+            warpAmount={0.3}
+            resolutionScale={1}
           />
         </div>
         <div className="relative z-20 text-center px-6 max-w-5xl mx-auto">
-          <div className="bg-black/80 backdrop-blur-md rounded-3xl px-12 py-10">
-            <h1 className="text-4xl md:text-6xl font-bold text-white">
-              <span className="font-sixtyfour text-5xl">Fusion.AI</span><br/>
-              <br />
-              <span className="font-nabla">Replit x Vibeathon</span>
-              <br />
-              <span className="font-nabla">Polaris School of Technology</span>
-            </h1>
-            <p className="text-xl md:text-2xl mt-8 text-white/90 max-w-3xl mx-auto">
-              A Human + AI Co-Creation Platform where you collaborate with AI for
-              coding, creative art, and adaptive tutoring
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-4 mt-6">
+          <h1 className="text-4xl md:text-6xl font-bold text-white" style={{ textShadow: '0 4px 12px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.9)' }}>
+            <span className="font-sixtyfour text-5xl">Fusion.AI</span><br/>
+            <br />
+            <span className="font-nabla">Replit x Vibeathon</span>
+            <br />
+            <span className="font-nabla">Polaris School of Technology</span>
+          </h1>
+          <p className="text-xl md:text-2xl mt-8 text-white/90 max-w-3xl mx-auto" style={{ textShadow: '0 3px 8px rgba(0,0,0,0.8), 0 1px 3px rgba(0,0,0,0.9)' }}>
+            A Human + AI Co-Creation Platform where you collaborate with AI for
+            coding, creative art, and adaptive tutoring
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
             <Link href="/auth">
               <Button
                 size="lg"
-                className="px-8 py-5 mt-5 text-lg rounded-full bg-transparent backdrop-blur-3xl border border-purple-300 hover:white/100 text-purple-300"
+                variant="outline"
+                className="px-8 py-6 text-lg rounded-full bg-purple-500/20 backdrop-blur-md border-2 border-purple-300 text-white hover:bg-purple-500/30"
                 data-testid="button-get-started"
               >
                 Get Started
@@ -65,8 +61,9 @@ export default function Landing() {
             </Link>
             <Button
               size="lg"
+              variant="outline"
               onClick={scrollToOverview}
-              className="px-8 py-5 mt-5 text-lg rounded-full bg-transparent backdrop-blur-3xl border border-purple-300 hover:white/100 text-purple-300"
+              className="px-8 py-6 text-lg rounded-full bg-purple-500/20 backdrop-blur-md border-2 border-purple-300 text-white hover:bg-purple-500/30"
               data-testid="button-project-overview"
             >
               <FileText className="h-5 w-5 mr-2" />
