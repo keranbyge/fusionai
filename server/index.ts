@@ -2,14 +2,22 @@ import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { getSessionMiddleware } from "./auth";
 
 const app = express();
+
+// Trust proxy for secure cookies behind Replit's proxy
+app.set("trust proxy", 1);
 
 declare module 'http' {
   interface IncomingMessage {
     rawBody: unknown
   }
 }
+
+// Session middleware must be before body parsers
+app.use(getSessionMiddleware());
+
 app.use(express.json({
   verify: (req, _res, buf) => {
     req.rawBody = buf;

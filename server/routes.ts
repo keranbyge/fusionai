@@ -1,8 +1,11 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertWorkspaceSchema, insertMessageSchema, insertDiagramSchema } from "@shared/schema";
+import { insertWorkspaceSchema, insertMessageSchema, insertDiagramSchema, insertUserSchema } from "@shared/schema";
+import { requireAuth } from "./auth";
 import OpenAI from "openai";
+import bcrypt from "bcrypt";
+import { z } from "zod";
 
 // Using OpenRouter API with the user's API key
 const openai = new OpenAI({
@@ -10,13 +13,118 @@ const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
 });
 
+const SALT_ROUNDS = 12;
+
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // Workspace routes
-  app.get("/api/workspaces", async (req, res) => {
+  // Authentication routes
+  app.post("/api/auth/signup", async (req, res) => {
     try {
-      // For now, using a demo user ID - will be replaced with auth later
-      const userId = "demo-user";
+      const { username, password } = insertUserSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existing = await storage.getUserByUsername(username);
+      if (existing) {
+        return res.status(400).json({ error: "Username already exists" });
+      }
+      
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+      
+      // Create user
+      const user = await storage.createUser({
+        username: username.toLowerCase(),
+        password: hashedPassword,
+      });
+      
+      // Set session
+      req.session.userId = user.id;
+      
+      // Return safe user (without password)
+      const { password: _, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (error) {
+      console.error("Error in signup:", error);
+      res.status(400).json({ error: "Failed to create account" });
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { username, password } = insertUserSchema.parse(req.body);
+      
+      // Find user
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+      
+      // Verify password
+      const valid = await bcrypt.compare(password, user.password);
+      if (!valid) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+      
+      // Set session
+      req.session.userId = user.id;
+      
+      // Return safe user (without password)
+      const { password: _, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (error) {
+      console.error("Error in login:", error);
+      res.status(400).json({ error: "Failed to login" });
+    }
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ error: "Failed to logout" });
+      }
+      res.json({ success: true });
+    });
+  });
+
+  app.get("/api/auth/user", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Return safe user (without password)
+      const { password: _, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ error: "Failed to fetch user" });
+    }
+  });
+
+  app.patch("/api/auth/user", requireAuth, async (req, res) => {
+    try {
+      const { name } = req.body;
+      if (!name || typeof name !== "string") {
+        return res.status(400).json({ error: "Name is required" });
+      }
+      
+      const user = await storage.updateUser(req.session.userId!, { name });
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ error: "Failed to update user" });
+    }
+  });
+  
+  // Workspace routes (protected)
+  app.get("/api/workspaces", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId!;
       const workspaces = await storage.getWorkspacesByUserId(userId);
       res.json(workspaces);
     } catch (error) {
@@ -25,11 +133,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/workspaces", async (req, res) => {
+  app.post("/api/workspaces", requireAuth, async (req, res) => {
     try {
       const validated = insertWorkspaceSchema.parse({
         ...req.body,
-        userId: "demo-user", // Will be replaced with auth
+        userId: req.session.userId!,
       });
       const workspace = await storage.createWorkspace(validated);
       res.json(workspace);
@@ -39,9 +147,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/workspaces/:id", async (req, res) => {
+  app.patch("/api/workspaces/:id", requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
+      
+      // Verify ownership
+      const existing = await storage.getWorkspaceById(id);
+      if (!existing) {
+        return res.status(404).json({ error: "Workspace not found" });
+      }
+      if (existing.userId !== req.session.userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
       const workspace = await storage.updateWorkspace(id, req.body);
       if (!workspace) {
         return res.status(404).json({ error: "Workspace not found" });
@@ -53,9 +171,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/workspaces/:id", async (req, res) => {
+  app.delete("/api/workspaces/:id", requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
+      
+      // Verify ownership
+      const existing = await storage.getWorkspaceById(id);
+      if (!existing) {
+        return res.status(404).json({ error: "Workspace not found" });
+      }
+      if (existing.userId !== req.session.userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
       const deleted = await storage.deleteWorkspace(id);
       if (!deleted) {
         return res.status(404).json({ error: "Workspace not found" });
@@ -67,10 +195,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Message routes
-  app.get("/api/workspaces/:workspaceId/messages/:panelType", async (req, res) => {
+  // Message routes (protected)
+  app.get("/api/workspaces/:workspaceId/messages/:panelType", requireAuth, async (req, res) => {
     try {
       const { workspaceId, panelType } = req.params;
+      
+      // Verify workspace ownership
+      const workspace = await storage.getWorkspaceById(workspaceId);
+      if (!workspace) {
+        return res.status(404).json({ error: "Workspace not found" });
+      }
+      if (workspace.userId !== req.session.userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
       const messages = await storage.getMessagesByWorkspaceAndPanel(workspaceId, panelType);
       res.json(messages);
     } catch (error) {
@@ -79,10 +217,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Coder AI endpoint
-  app.post("/api/ai/coder", async (req, res) => {
+  // Coder AI endpoint (protected)
+  app.post("/api/ai/coder", requireAuth, async (req, res) => {
     try {
       const { workspaceId, message } = req.body;
+      
+      // Verify workspace ownership
+      const workspace = await storage.getWorkspaceById(workspaceId);
+      if (!workspace) {
+        return res.status(404).json({ error: "Workspace not found" });
+      }
+      if (workspace.userId !== req.session.userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
       
       // Save user message
       const userMessage = await storage.createMessage({
@@ -128,10 +275,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Artist AI endpoint
-  app.post("/api/ai/artist", async (req, res) => {
+  // Artist AI endpoint (protected)
+  app.post("/api/ai/artist", requireAuth, async (req, res) => {
     try {
       const { workspaceId, prompt } = req.body;
+      
+      // Verify workspace ownership
+      const workspace = await storage.getWorkspaceById(workspaceId);
+      if (!workspace) {
+        return res.status(404).json({ error: "Workspace not found" });
+      }
+      if (workspace.userId !== req.session.userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
 
       // Call OpenRouter to generate Mermaid diagram
       const completion = await openai.chat.completions.create({
@@ -165,10 +321,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Tutor AI endpoint
-  app.post("/api/ai/tutor", async (req, res) => {
+  // Tutor AI endpoint (protected)
+  app.post("/api/ai/tutor", requireAuth, async (req, res) => {
     try {
       const { workspaceId, message } = req.body;
+      
+      // Verify workspace ownership
+      const workspace = await storage.getWorkspaceById(workspaceId);
+      if (!workspace) {
+        return res.status(404).json({ error: "Workspace not found" });
+      }
+      if (workspace.userId !== req.session.userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
 
       // Save user message
       const userMessage = await storage.createMessage({
@@ -226,10 +391,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Diagrams list endpoint
-  app.get("/api/workspaces/:workspaceId/diagrams", async (req, res) => {
+  // Diagrams list endpoint (protected)
+  app.get("/api/workspaces/:workspaceId/diagrams", requireAuth, async (req, res) => {
     try {
       const { workspaceId } = req.params;
+      
+      // Verify workspace ownership
+      const workspace = await storage.getWorkspaceById(workspaceId);
+      if (!workspace) {
+        return res.status(404).json({ error: "Workspace not found" });
+      }
+      if (workspace.userId !== req.session.userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
       const diagrams = await storage.getDiagramsByWorkspace(workspaceId);
       res.json(diagrams);
     } catch (error) {
@@ -238,8 +413,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Text-to-image generation endpoint
-  app.post("/api/ai/generate-image", async (req, res) => {
+  // Text-to-image generation endpoint (protected)
+  app.post("/api/ai/generate-image", requireAuth, async (req, res) => {
     try {
       const { prompt } = req.body;
       console.log("Generating image for prompt:", prompt);

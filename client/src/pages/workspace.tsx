@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Plus, ChevronLeft, ChevronRight, Edit2, Trash2, LogOut, User, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,6 +9,7 @@ import { CoderPanel } from "@/components/CoderPanel";
 import { ArtistPanel } from "@/components/ArtistPanel";
 import { TutorPanel } from "@/components/TutorPanel";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -32,6 +33,8 @@ import type { Workspace } from "@shared/schema";
 import { Sparkles } from "lucide-react";
 
 export default function WorkspacePage() {
+  const [, setLocation] = useLocation();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [activeWorkspace, setActiveWorkspace] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
@@ -44,8 +47,16 @@ export default function WorkspacePage() {
   });
   const workspaceCreatedRef = useRef(false);
 
+  // Redirect to auth if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      setLocation("/auth");
+    }
+  }, [authLoading, isAuthenticated, setLocation]);
+
   const { data: workspaces = [], isLoading } = useQuery<Workspace[]>({
     queryKey: ["/api/workspaces"],
+    enabled: isAuthenticated, // Only fetch workspaces if authenticated
   });
 
   const createWorkspaceMutation = useMutation({
@@ -146,12 +157,19 @@ export default function WorkspacePage() {
     }
   };
 
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/auth/logout");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      setLocation("/auth");
+    },
+  });
+
   const handleLogout = () => {
     if (confirm("Are you sure you want to logout?")) {
-      localStorage.removeItem("isAuthenticated");
-      localStorage.removeItem("currentUser");
-      localStorage.removeItem("firstWorkspace");
-      window.location.href = "/";
+      logoutMutation.mutate();
     }
   };
 

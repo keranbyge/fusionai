@@ -1,12 +1,27 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, jsonb, index, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Session storage table for express-session with connect-pg-simple
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// Users table with name field for onboarding
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  password: text("password").notNull(), // bcrypt hashed password
+  name: text("name"), // nullable until onboarding complete
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const workspaces = pgTable("workspaces", {
@@ -35,6 +50,7 @@ export const diagrams = pgTable("diagrams", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Insert schemas - omit password hash from user responses
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -56,8 +72,14 @@ export const insertDiagramSchema = createInsertSchema(diagrams).omit({
   createdAt: true,
 });
 
+// Safe user schema - excludes password hash
+export const safeUserSchema = createInsertSchema(users).omit({
+  password: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type SafeUser = Omit<User, 'password'>; // User without password hash
 export type Workspace = typeof workspaces.$inferSelect;
 export type InsertWorkspace = z.infer<typeof insertWorkspaceSchema>;
 export type Message = typeof messages.$inferSelect;
