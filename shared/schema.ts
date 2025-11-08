@@ -87,6 +87,10 @@ export const insertDiagramSchema = createInsertSchema(diagrams).omit({
 export const insertReminderSchema = createInsertSchema(reminders).omit({
   id: true,
   createdAt: true,
+}).extend({
+  reminderDate: z.union([z.date(), z.string().datetime()]).transform((val) => 
+    typeof val === 'string' ? new Date(val) : val
+  ),
 });
 
 // Safe user schema - excludes password hash

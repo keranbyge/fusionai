@@ -14,8 +14,8 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent">
-      <header className="fixed top-0 left-0 right-0 z-50 border-b bg-transparent backdrop-blur-2xl border border-white/20">
+    <div className="min-h-screen bg-transparent dark">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-3xl bg-black/20 border-white/10">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-purple-300" />
@@ -71,7 +71,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section id="project-overview" className="relative min-h-screen bg-background py-20 px-6">
+      <section id="project-overview" className="relative min-h-screen bg-background dark:bg-gray-950 py-20 px-6">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">Project Overview</h2>
