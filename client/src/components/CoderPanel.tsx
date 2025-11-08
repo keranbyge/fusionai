@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Code2, X, Send } from "lucide-react";
+import { Code2, X, Send, Mic, MicOff, BookOpen, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { voiceManager } from "@/lib/voiceManager";
+import ReactMarkdown from "react-markdown";
 import type { Message } from "@shared/schema";
 
 interface CoderPanelProps {
@@ -15,6 +17,8 @@ interface CoderPanelProps {
 
 export function CoderPanel({ workspaceId, onClose }: CoderPanelProps) {
   const [input, setInput] = useState("");
+  const [isListening, setIsListening] = useState(voiceManager.getIsListening());
+  const [quizzes, setQuizzes] = useState<Array<{ title: string; topics: string[] }>>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { data: messages = [] } = useQuery<Message[]>({
@@ -43,14 +47,57 @@ export function CoderPanel({ workspaceId, onClose }: CoderPanelProps) {
     }
   }, [messages]);
 
+  useEffect(() => {
+    if (messages.length > 0) {
+      const topics = messages
+        .filter(m => m.role === "user")
+        .map(m => m.content.toLowerCase());
+      
+      const recommendations = [];
+      if (topics.some(t => t.includes("react") || t.includes("component") || t.includes("hook"))) {
+        recommendations.push({ title: "React Fundamentals Quiz", topics: ["Components", "Hooks", "State Management"] });
+      }
+      if (topics.some(t => t.includes("typescript") || t.includes("type") || t.includes("interface"))) {
+        recommendations.push({ title: "TypeScript Mastery Quiz", topics: ["Types", "Interfaces", "Generics"] });
+      }
+      if (topics.some(t => t.includes("api") || t.includes("fetch") || t.includes("async"))) {
+        recommendations.push({ title: "Async JavaScript Quiz", topics: ["Promises", "Async/Await", "API Calls"] });
+      }
+      if (topics.some(t => t.includes("css") || t.includes("style") || t.includes("tailwind"))) {
+        recommendations.push({ title: "CSS & Styling Quiz", topics: ["Flexbox", "Grid", "Responsive Design"] });
+      }
+      if (topics.some(t => t.includes("algorithm") || t.includes("data structure") || t.includes("complexity"))) {
+        recommendations.push({ title: "Algorithms & Data Structures Quiz", topics: ["Arrays", "Trees", "Big O"] });
+      }
+      setQuizzes(recommendations.slice(0, 3));
+    }
+  }, [messages]);
+
   const handleSend = () => {
     if (!input.trim() || sendMessageMutation.isPending) return;
     sendMessageMutation.mutate(input);
   };
 
+  const toggleVoiceInput = () => {
+    if (isListening) {
+      voiceManager.stop();
+      setIsListening(false);
+    } else {
+      const started = voiceManager.start((text) => setInput(text));
+      setIsListening(started);
+    }
+  };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsListening(voiceManager.getIsListening());
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div className="h-full flex flex-col bg-background">
-      <header className="h-12 border-b px-4 flex items-center justify-between">
+    <div className="h-full flex flex-col bg-white/5 backdrop-blur-sm">
+      <header className="h-12 border-b border-white/10 px-4 flex items-center justify-between bg-white/5 backdrop-blur-md">
         <div className="flex items-center gap-2">
           <Code2 className="h-4 w-4 text-primary" />
           <span className="font-semibold text-sm">Coder</span>
@@ -80,27 +127,63 @@ export function CoderPanel({ workspaceId, onClose }: CoderPanelProps) {
               className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <Card
-                className={`px-4 py-3 max-w-[80%] ${
+                className={`px-4 py-3 max-w-[80%] border-white/20 ${
                   message.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card"
+                    ? "bg-blue-500/20 backdrop-blur-md text-white border-blue-400/30"
+                    : "bg-white/10 backdrop-blur-md border-white/20"
                 }`}
               >
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                <div className="text-sm prose prose-sm dark:prose-invert max-w-none">
+                  <ReactMarkdown>{message.content}</ReactMarkdown>
+                </div>
               </Card>
             </div>
           ))}
           {sendMessageMutation.isPending && (
             <div className="flex justify-start">
-              <Card className="px-4 py-3 bg-card">
+              <Card className="px-4 py-3 bg-white/10 backdrop-blur-md border-white/20">
                 <p className="text-sm text-muted-foreground">Thinking...</p>
               </Card>
             </div>
           )}
+          {quizzes.length > 0 && (
+            <Card className="border-purple-400/30 bg-purple-500/10 backdrop-blur-md">
+              <CardHeader>
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Recommended Quizzes
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {quizzes.map((quiz, idx) => (
+                  <div key={idx} className="flex items-start justify-between gap-3 p-3 rounded-lg bg-background/50">
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{quiz.title}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {quiz.topics.join(" • ")}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1 shrink-0"
+                      onClick={() => {
+                        const time = prompt("Set reminder (e.g., '2 hours', '1 day', 'tomorrow'):");
+                        if (time) alert(`Reminder set for ${quiz.title} in ${time}`);
+                      }}
+                    >
+                      <Bell className="h-3 w-3" />
+                      Remind
+                    </Button>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </ScrollArea>
 
-      <div className="border-t p-4">
+      <div className="border-t border-white/10 p-4 bg-white/5 backdrop-blur-md">
         <div className="flex gap-2">
           <Input
             placeholder="Ask for code help..."
@@ -110,6 +193,14 @@ export function CoderPanel({ workspaceId, onClose }: CoderPanelProps) {
             data-testid="input-coder-message"
             disabled={sendMessageMutation.isPending}
           />
+          <Button
+            size="icon"
+            variant={isListening ? "destructive" : "outline"}
+            onClick={toggleVoiceInput}
+            data-testid="button-voice-coder"
+          >
+            {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          </Button>
           <Button
             size="icon"
             onClick={handleSend}

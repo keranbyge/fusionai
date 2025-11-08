@@ -5,7 +5,8 @@ import { insertWorkspaceSchema, insertMessageSchema, insertDiagramSchema } from 
 import OpenAI from "openai";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENROUTER_API_KEY,
+  baseURL: "https://openrouter.ai/api/v1",
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -51,6 +52,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/workspaces/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteWorkspace(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Workspace not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting workspace:", error);
+      res.status(400).json({ error: "Failed to delete workspace" });
+    }
+  });
+
   // Message routes
   app.get("/api/workspaces/:workspaceId/messages/:panelType", async (req, res) => {
     try {
@@ -79,9 +94,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get conversation history
       const history = await storage.getMessagesByWorkspaceAndPanel(workspaceId, "coder");
       
-      // Call OpenAI
+      // Call OpenRouter
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "openai/gpt-4o-mini",
         messages: [
           {
             role: "system",
@@ -117,9 +132,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { workspaceId, prompt } = req.body;
 
-      // Call OpenAI to generate Mermaid diagram
+      // Call OpenRouter to generate Mermaid diagram
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "openai/gpt-4o-mini",
         messages: [
           {
             role: "system",
@@ -177,9 +192,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         systemMessage += `\n\nContext from the user's recent coding work:\n${contextSummary}`;
       }
 
-      // Call OpenAI
+      // Call OpenRouter
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "openai/gpt-4o-mini",
         messages: [
           {
             role: "system",
@@ -219,6 +234,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching diagrams:", error);
       res.status(500).json({ error: "Failed to fetch diagrams" });
+    }
+  });
+
+  // Text-to-image generation endpoint
+  app.post("/api/ai/generate-image", async (req, res) => {
+    try {
+      const { prompt } = req.body;
+      console.log("Generating image for prompt:", prompt);
+
+      const imageResponse = await openai.images.generate({
+        model: "dall-e-3",
+        prompt: prompt,
+        n: 1,
+        size: "1024x1024",
+      });
+
+      const imageUrl = imageResponse.data[0]?.url;
+
+      if (!imageUrl) {
+        console.error("No image URL in response");
+        return res.status(500).json({ error: "No image generated" });
+      }
+
+      console.log("Image generated successfully:", imageUrl);
+      res.json({ imageUrl });
+    } catch (error) {
+      console.error("Error generating image:", error);
+      res.status(500).json({ error: "Failed to generate image", message: error.message });
     }
   });
 

@@ -5,14 +5,20 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/hooks/use-theme";
 import Landing from "@/pages/landing";
+import AuthPage from "@/pages/auth";
+import OnboardingPage from "@/pages/onboarding";
 import WorkspacePage from "@/pages/workspace";
+import StatsPage from "@/pages/stats";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Landing} />
+      <Route path="/auth" component={AuthPage} />
+      <Route path="/onboarding" component={OnboardingPage} />
       <Route path="/workspace" component={WorkspacePage} />
+      <Route path="/stats" component={StatsPage} />
       <Route component={NotFound} />
     </Switch>
   );

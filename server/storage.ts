@@ -9,6 +9,8 @@ import {
   type InsertDiagram
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { writeFileSync, readFileSync, existsSync } from "fs";
+import { join } from "path";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -19,6 +21,7 @@ export interface IStorage {
   getWorkspacesByUserId(userId: string): Promise<Workspace[]>;
   createWorkspace(workspace: InsertWorkspace): Promise<Workspace>;
   updateWorkspace(id: string, updates: Partial<InsertWorkspace>): Promise<Workspace | undefined>;
+  deleteWorkspace(id: string): Promise<boolean>;
   
   getMessagesByWorkspaceAndPanel(workspaceId: string, panelType: string): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
@@ -32,12 +35,50 @@ export class MemStorage implements IStorage {
   private workspaces: Map<string, Workspace>;
   private messages: Map<string, Message>;
   private diagrams: Map<string, Diagram>;
+  private dataFile = join(process.cwd(), '.data.json');
 
   constructor() {
     this.users = new Map();
     this.workspaces = new Map();
     this.messages = new Map();
     this.diagrams = new Map();
+    this.loadData();
+  }
+
+  private loadData() {
+    try {
+      if (existsSync(this.dataFile)) {
+        const data = JSON.parse(readFileSync(this.dataFile, 'utf-8'));
+        this.workspaces = new Map((data.workspaces || []).map(([k, v]: [string, any]) => [
+          k,
+          { ...v, createdAt: new Date(v.createdAt), updatedAt: new Date(v.updatedAt) }
+        ]));
+        this.messages = new Map((data.messages || []).map(([k, v]: [string, any]) => [
+          k,
+          { ...v, createdAt: new Date(v.createdAt) }
+        ]));
+        this.diagrams = new Map((data.diagrams || []).map(([k, v]: [string, any]) => [
+          k,
+          { ...v, createdAt: new Date(v.createdAt) }
+        ]));
+        console.log(`Loaded ${this.workspaces.size} workspaces, ${this.messages.size} messages, ${this.diagrams.size} diagrams`);
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+  }
+
+  private saveData() {
+    try {
+      const data = {
+        workspaces: Array.from(this.workspaces.entries()),
+        messages: Array.from(this.messages.entries()),
+        diagrams: Array.from(this.diagrams.entries()),
+      };
+      writeFileSync(this.dataFile, JSON.stringify(data, null, 2));
+    } catch (error) {
+      console.error('Error saving data:', error);
+    }
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -78,6 +119,7 @@ export class MemStorage implements IStorage {
       updatedAt: now,
     };
     this.workspaces.set(id, workspace);
+    this.saveData();
     return workspace;
   }
 
@@ -91,7 +133,14 @@ export class MemStorage implements IStorage {
       updatedAt: new Date(),
     };
     this.workspaces.set(id, updated);
+    this.saveData();
     return updated;
+  }
+
+  async deleteWorkspace(id: string): Promise<boolean> {
+    const result = this.workspaces.delete(id);
+    if (result) this.saveData();
+    return result;
   }
 
   async getMessagesByWorkspaceAndPanel(workspaceId: string, panelType: string): Promise<Message[]> {
@@ -108,6 +157,7 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
     };
     this.messages.set(id, message);
+    this.saveData();
     return message;
   }
 
@@ -125,6 +175,7 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
     };
     this.diagrams.set(id, diagram);
+    this.saveData();
     return diagram;
   }
 }

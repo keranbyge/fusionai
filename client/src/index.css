@@ -240,6 +240,85 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+
+  .font-sixtyfour {
+    font-family: 'Press Start 2P', cursive;
+    letter-spacing: 0.05em;
+  }
+
+  .font-nabla {
+    font-family: "Nabla", system-ui;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    font-variation-settings: "EDPT" 100, "EHLT" 12;
+  }
+
+  .prose {
+    color: inherit;
+  }
+
+  .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+    color: inherit;
+    font-weight: 600;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+  }
+
+  .prose h1 { font-size: 1.5em; }
+  .prose h2 { font-size: 1.3em; }
+  .prose h3 { font-size: 1.1em; }
+
+  .prose p {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+  }
+
+  .prose code {
+    background: hsl(var(--muted));
+    padding: 0.2em 0.4em;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+  }
+
+  .prose pre {
+    background: hsl(var(--muted));
+    padding: 1em;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  .prose pre code {
+    background: transparent;
+    padding: 0;
+  }
+
+  .prose ul, .prose ol {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    padding-left: 1.5em;
+  }
+
+  .prose li {
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+  }
+
+  .prose strong {
+    font-weight: 600;
+  }
+
+  .prose em {
+    font-style: italic;
+  }
+
+  .prose blockquote {
+    border-left: 3px solid hsl(var(--primary));
+    padding-left: 1em;
+    margin: 1em 0;
+    font-style: italic;
+  }
 }
 
 /**
